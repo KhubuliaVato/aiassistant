@@ -1,0 +1,2054 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="AiAssistant.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AiAssistant"
+        Title="1Flow AiAssistant" WindowState="Maximized" Background="{DynamicResource BgApp}"
+        MinWidth="860" MinHeight="540"
+        WindowStyle="None" ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="5"
+                      UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title bar: brand mark + window controls -->
+        <Grid Grid.Row="0" Background="Transparent"
+              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0" IsHitTestVisible="False">
+                <Border Width="7" Height="16" Background="{DynamicResource Accent}" CornerRadius="1.5"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform><SkewTransform AngleX="-8"/></Border.RenderTransform>
+                </Border>
+                <TextBlock Text="1Flow" FontSize="13" FontWeight="SemiBold" Margin="11,0,0,0"
+                           Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                <TextBlock Text="AI ASSISTANT" FontSize="9.5" FontWeight="SemiBold" Margin="9,2,0,0"
+                           Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"
+                        Click="BtnWinMinimize_Click"/>
+                <Button x:Name="BtnWinMaximize" Style="{StaticResource CaptionButton}" Content="&#xE922;"
+                        ToolTip="Maximize / Restore" Click="BtnWinMaximize_Click"/>
+                <Button Style="{StaticResource CaptionCloseButton}" Content="&#xE8BB;" ToolTip="Close"
+                        Click="BtnWinClose_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- App content (sidebar + tabs) in row 1 -->
+        <Grid Grid.Row="1" Margin="12,0,12,12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="236"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource BgSidebar}" BorderBrush="{DynamicResource Border}"
+                BorderThickness="1" CornerRadius="16" ClipToBounds="True">
+            <local:SidebarView/>
+        </Border>
+
+        <Border Grid.Column="2" Background="Transparent" Padding="0">
+            <TabControl x:Name="MainTabControl" Background="Transparent" BorderThickness="0" Padding="0">
+                <TabControl.ItemContainerStyle>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Style>
+                </TabControl.ItemContainerStyle>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 0: გავერტიკალურება                            -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <Grid Opacity="0" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <TranslateTransform Y="12"/>
+                        </Grid.RenderTransform>
+                        <Grid.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.35"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.4">
+                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Grid.Triggers>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="410"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ═══════════ LEFT PANEL: source video + action ═══════════ -->
+                        <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22"
+                                AllowDrop="True"
+                                DragEnter="CropArea_DragEnter" DragLeave="CropArea_DragLeave"
+                                DragOver="CropArea_DragOver" Drop="CropArea_Drop">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header: icon + title + subtitle + format chip -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
+                                        <Path Data="{StaticResource Icon.Crop}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="გავერტიკალურება" FontSize="21" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="აირჩიე ვიდეო და გადააქციე ვერტიკალურ 9:16 ფორმატში"
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                                            BorderThickness="1" CornerRadius="16" Padding="12,5" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Width="8" Height="13" CornerRadius="2" BorderThickness="1.4"
+                                                    BorderBrush="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                            <TextBlock Text="9:16" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Workspace folder bar -->
+                                <Border Grid.Row="1" Margin="0,18,0,16" Background="{DynamicResource BgCard}"
+                                        BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="14,8,8,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="15"
+                                                   Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Grid.Column="1" x:Name="TxtFolderPath" Text="საქაღალდე არ არის არჩეული..."
+                                                   Foreground="{DynamicResource TextSecondary}" FontSize="12.5"
+                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                            <Button x:Name="BtnClearLibrary" Style="{StaticResource GhostButton}" Content="გასუფთავება"
+                                                    FontSize="12" Padding="12,7" ToolTip="სრულად გაასუფთავებს ვიდეო მასალების სიას"
+                                                    Click="BtnClearLibrary_Click"/>
+                                            <Button Style="{StaticResource SecondaryButton}" Click="BtnChooseFolder_Click"
+                                                    Content="საქაღალდის შეცვლა" FontSize="12" Padding="14,7" Margin="6,0,0,0"
+                                                    ToolTip="სამუშაო საქაღალდის შეცვლა"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Content area: video grid / editor preview -->
+                                <Grid Grid.Row="2">
+
+                                    <!-- LIBRARY MODE -->
+                                    <Grid x:Name="LibraryModePanel">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Grid Grid.Row="0">
+                                            <ListBox x:Name="VideoListBox" SelectionChanged="VideoListBox_SelectionChanged"
+                                                     ItemContainerStyle="{StaticResource VideoCardItem}"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                <ListBox.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ListBox.ItemsPanel>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Width="220">
+                                                            <Border Width="220" Height="124" Background="{DynamicResource BgInput}">
+                                                                <Border.Clip>
+                                                                    <RectangleGeometry Rect="0,0,220,124" RadiusX="10" RadiusY="10"/>
+                                                                </Border.Clip>
+                                                                <Grid>
+                                                                    <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="26"
+                                                                               Foreground="{DynamicResource TextDisabled}"
+                                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    <Image Source="{Binding ThumbnailPath}" Stretch="UniformToFill"
+                                                                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                                    <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8"
+                                                                            Background="#B0000000" CornerRadius="6" Padding="7,2">
+                                                                        <TextBlock Text="{Binding FileExtensionBadge}" FontSize="10.5"
+                                                                                   FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </Border>
+                                                            <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextPrimary}" Margin="2,10,2,0"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding FileMeta}" FontSize="11.5"
+                                                                       Foreground="{DynamicResource TextMuted}" Margin="2,3,2,2"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <!-- Empty state (visible only while the list is empty) -->
+                                            <Grid>
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Items.Count, ElementName=VideoListBox}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Rectangle RadiusX="16" RadiusY="16" Fill="{DynamicResource BgCard}"
+                                                           Stroke="{DynamicResource BorderStrong}" StrokeThickness="1.2"
+                                                           StrokeDashArray="5 5" IsHitTestVisible="False"/>
+                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Grid Width="92" Height="92" HorizontalAlignment="Center">
+                                                        <Ellipse Fill="{DynamicResource AccentSoft}"/>
+                                                        <Ellipse Stroke="{DynamicResource AccentBorder}" StrokeThickness="1" Margin="10"/>
+                                                        <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="32"
+                                                                   Foreground="{DynamicResource Accent}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                    <TextBlock Text="ჩააგდე ვიდეო აქ" FontSize="18" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                                                    <TextBlock Text="ან აირჩიე საქაღალდე, სადაც შენი ვიდეოებია" FontSize="12.5"
+                                                               Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                                                    <Button Style="{StaticResource SecondaryButton}" Click="BtnChooseFolder_Click"
+                                                            Content="საქაღალდის არჩევა" HorizontalAlignment="Center"
+                                                            Padding="22,11" Margin="0,22,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+
+                                        <!-- Recent jobs (hidden entirely until there is at least one) -->
+                                        <Border Grid.Row="1" x:Name="JobsCard" Style="{StaticResource TileCard}"
+                                                Margin="0,4,0,0" Padding="16,12" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="ბოლო სამუშაოები" Style="{StaticResource SectionLabel}" Margin="0"
+                                                               VerticalAlignment="Center"/>
+                                                    <Button x:Name="BtnClearHistory" Grid.Column="1" Style="{StaticResource GhostButton}"
+                                                            Content="გასუფთავება" FontSize="11.5" Padding="10,5"
+                                                            ToolTip="სრულად გაასუფთავებს ბოლო სამუშაოების ისტორიას"
+                                                            Click="BtnClearHistory_Click"/>
+                                                </Grid>
+                                                <TextBlock x:Name="TxtNoJobs" Visibility="Collapsed" Text=""/>
+                                                <ScrollViewer MaxHeight="132" VerticalScrollBarVisibility="Auto">
+                                                    <StackPanel x:Name="JobHistoryPanel"/>
+                                                </ScrollViewer>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- PREVIEW MODE (shown after a drop / a cut sent from the editor) -->
+                                    <Border x:Name="EditorPreviewPanel" Visibility="Collapsed" Background="Transparent">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Button Grid.Row="0" x:Name="BtnBackToLibrary" Style="{StaticResource SecondaryButton}"
+                                                    Content="←  სიაში დაბრუნება" HorizontalAlignment="Left"
+                                                    Padding="14,8" FontSize="12.5" ToolTip="დაბრუნება ვიდეოების სიაში"
+                                                    Click="BtnBackToLibrary_Click"/>
+
+                                            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                                                <!-- phone-shaped 9:16 preview -->
+                                                <StackPanel Margin="0,0,64,0" VerticalAlignment="Center">
+                                                    <Grid Width="236" Height="420">
+                                                        <Border CornerRadius="32" Background="{DynamicResource BgInput}"
+                                                                BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1.5">
+                                                            <Border.Effect>
+                                                                <DropShadowEffect Color="#E5202E" BlurRadius="46" ShadowDepth="0" Opacity="0.20"/>
+                                                            </Border.Effect>
+                                                        </Border>
+                                                        <Grid Margin="7" Width="222" Height="406">
+                                                            <Grid.Clip>
+                                                                <RectangleGeometry Rect="0,0,222,406" RadiusX="25" RadiusY="25"/>
+                                                            </Grid.Clip>
+                                                            <Rectangle Fill="{DynamicResource BgCard}"/>
+                                                            <StackPanel x:Name="PreviewPlaceholder" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="30"
+                                                                           Foreground="{DynamicResource TextDisabled}" HorizontalAlignment="Center"/>
+                                                                <TextBlock Text="კადრი იტვირთება…" Foreground="{DynamicResource TextMuted}" FontSize="11"
+                                                                           TextAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                                                            </StackPanel>
+                                                            <Image x:Name="PreviewThumbnail" Stretch="UniformToFill"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                            <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0"
+                                                                    Background="#99000000" CornerRadius="10" Padding="10,3">
+                                                                <TextBlock Text="9:16" FontSize="10.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Grid>
+                                                    <TextBlock x:Name="TxtPreviewCaption" Text="კადრის გადახედვა" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                               HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                                                </StackPanel>
+
+                                                <!-- details -->
+                                                <StackPanel Width="340" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Ellipse Width="9" Height="9" Fill="{DynamicResource Success}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                        <TextBlock Text="მზადაა გასავერტიკალურებლად" FontSize="17" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="საბოლოო ფორმატი: 9:16 · 1080 × 1920" FontSize="12.5"
+                                                               Foreground="{DynamicResource TextMuted}" Margin="19,5,0,20"/>
+
+                                                    <Border Style="{StaticResource TileCard}" Padding="0" Margin="0">
+                                                        <StackPanel>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="ფაილი" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock x:Name="PreviewClipName" Text="" FontSize="12.5" FontWeight="Medium"
+                                                                           Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"
+                                                                           MaxWidth="210" TextTrimming="CharacterEllipsis"/>
+                                                            </Grid>
+                                                            <Rectangle Height="1" Fill="{DynamicResource Border}"/>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="ხანგრძლივობა" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock x:Name="PreviewDuration" Text="--:--" FontSize="12.5" FontWeight="Medium"
+                                                                           Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
+                                                            </Grid>
+                                                            <Rectangle Height="1" Fill="{DynamicResource Border}"/>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="სიჩქარე" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock x:Name="TxtSpeedValue" Text="ბალანსი" FontSize="12.5" FontWeight="Medium"
+                                                                           Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
+                                                            </Grid>
+                                                            <Rectangle Height="1" Fill="{DynamicResource Border}"/>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="ქვედა ტიტრი" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource OnOffText}">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsChecked, ElementName=ChkLowerThird}" Value="True">
+                                                                                    <Setter Property="Text" Value="ჩართულია"/>
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Grid>
+                                                            <Rectangle Height="1" Fill="{DynamicResource Border}"/>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="ლოგო / Watermark" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource OnOffText}">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsChecked, ElementName=ChkWatermark}" Value="True">
+                                                                                    <Setter Property="Text" Value="ჩართულია"/>
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Grid>
+                                                            <Rectangle Height="1" Fill="{DynamicResource Border}"/>
+                                                            <Grid Margin="18,13">
+                                                                <TextBlock Text="Intro / Outro" FontSize="12.5" Foreground="{DynamicResource TextMuted}"/>
+                                                                <TextBlock>
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource OnOffText}">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsChecked, ElementName=ChkIntroOutro}" Value="True">
+                                                                                    <Setter Property="Text" Value="ჩართულია"/>
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Grid>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <!-- Drag-over highlight -->
+                                    <Border x:Name="CropDragOverlay" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource Accent}" BorderThickness="2" CornerRadius="16"
+                                            Visibility="Collapsed" IsHitTestVisible="False">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="38"
+                                                       Foreground="{DynamicResource Accent}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="გაუშვი ვიდეო აქ" Foreground="{DynamicResource TextPrimary}" FontSize="18"
+                                                       FontWeight="SemiBold" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Action bar: selected file + Process / Stop (they swap in the same cell) -->
+                                <Border Grid.Row="3" Style="{StaticResource TileCard}" Margin="0,16,0,0" Padding="12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="46" Height="46" CornerRadius="12" Background="{DynamicResource BgInput}"
+                                                BorderBrush="{DynamicResource Border}" BorderThickness="1" Margin="0,0,14,0">
+                                            <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtSelName" Text="ვიდეო არ არის არჩეული" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock x:Name="TxtSelMeta" Text="აირჩიე ვიდეო სიიდან ან გადმოიტანე აქ" FontSize="12"
+                                                       Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <Grid Grid.Column="2" MinWidth="190" Margin="14,0,0,0">
+                                            <Button x:Name="BtnProcess" Style="{StaticResource GlowPrimaryButton}"
+                                                    Height="48" Padding="26,0" FontSize="14"
+                                                    ToolTip="ვიდეოს გადაიყვანს 9:16 ვერტიკალურ ფორმატში, არჩეული სიჩქარით"
+                                                    Visibility="Collapsed" Click="BtnProcess_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="დამუშავება" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="BtnStop" Style="{StaticResource DangerButton}"
+                                                    Height="48" Padding="26,0" FontSize="14"
+                                                    ToolTip="დაუყოვნებლივ წყვეტს მიმდინარე დამუშავებას"
+                                                    Visibility="Collapsed" Click="BtnStop_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="შეჩერება" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Status + progress -->
+                                <StackPanel Grid.Row="4" Margin="2,2,2,0">
+                                    <ProgressBar x:Name="MainProgressBar" Height="5" Minimum="0" Maximum="100" Value="0"
+                                                 Visibility="Collapsed" Margin="0,0,0,10"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource Success}" VerticalAlignment="Center" Margin="0,0,9,0"/>
+                                        <TextBlock x:Name="StatusLabel" Text="მზად არის სამუშაოდ"
+                                                   Foreground="{DynamicResource TextMuted}" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- ═══════════ RIGHT PANEL: options ═══════════ -->
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="22,22,16,20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Margin="0,0,6,16">
+                                    <TextBlock Text="პარამეტრები" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="რა დავამატოთ ვიდეოს" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,0">
+                                    <StackPanel>
+
+                                        <TextBlock Text="ᲑᲠᲔᲜᲓᲘᲜᲒᲘ" Style="{StaticResource SectionLabel}"/>
+
+                                        <!-- Lower third -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <CheckBox x:Name="ChkLowerThird" Style="{StaticResource ToggleSwitch}"
+                                                          Checked="ChkLowerThird_Changed" Unchecked="ChkLowerThird_Changed">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                            <Viewbox Width="19" Height="19">
+                                                                <Canvas Width="24" Height="24">
+                                                                    <Rectangle Canvas.Left="2" Canvas.Top="4" Width="20" Height="16" RadiusX="3.5" RadiusY="3.5"
+                                                                               Stroke="{DynamicResource Accent}" StrokeThickness="1.8"/>
+                                                                    <Rectangle Canvas.Left="6" Canvas.Top="13" Width="9" Height="3" RadiusX="1.5" RadiusY="1.5"
+                                                                               Fill="{DynamicResource Accent}"/>
+                                                                </Canvas>
+                                                            </Viewbox>
+                                                        </Border>
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="ქვედა ტიტრი" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                            <TextBlock Text="სახელი და პოზიცია კადრზე" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </CheckBox>
+                                                <Border x:Name="LowerThirdFields" Visibility="Collapsed" Margin="0,14,0,0" Padding="0,14,0,0"
+                                                        BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="TxtNoQuickLt"
+                                                                   Text="პრესეტი ჯერ არ გაქვს შენახული"
+                                                                   Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                        <WrapPanel x:Name="QuickLtChips" Orientation="Horizontal"/>
+                                                        <Border Background="Transparent" Cursor="Hand" Margin="0,8,0,0"
+                                                                MouseLeftButtonDown="BtnGoToBrandKit_Click" HorizontalAlignment="Left">
+                                                            <TextBlock Text="შექმნა ბრენდ-კიტში →" Foreground="{DynamicResource AccentText}" FontSize="11.5" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Watermark -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <CheckBox x:Name="ChkWatermark" Style="{StaticResource ToggleSwitch}"
+                                                          Checked="ChkWatermark_Changed" Unchecked="ChkWatermark_Changed">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                            <Viewbox Width="19" Height="19">
+                                                                <Canvas Width="24" Height="24">
+                                                                    <Rectangle Canvas.Left="2" Canvas.Top="4" Width="20" Height="16" RadiusX="3.5" RadiusY="3.5"
+                                                                               Stroke="{DynamicResource Accent}" StrokeThickness="1.8"/>
+                                                                    <Rectangle Canvas.Left="14" Canvas.Top="7.5" Width="5" Height="5" RadiusX="1.5" RadiusY="1.5"
+                                                                               Fill="{DynamicResource Accent}"/>
+                                                                </Canvas>
+                                                            </Viewbox>
+                                                        </Border>
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="ლოგო / Watermark" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                            <TextBlock Text="ბრენდის ნიშანი კადრის კუთხეში" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </CheckBox>
+                                                <Border x:Name="WatermarkFields" Visibility="Collapsed" Margin="0,14,0,0" Padding="0,14,0,0"
+                                                        BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="TxtNoQuickWm"
+                                                                   Text="პრესეტი ჯერ არ გაქვს შენახული"
+                                                                   Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                        <WrapPanel x:Name="QuickWmChips" Orientation="Horizontal"/>
+                                                        <Border Background="Transparent" Cursor="Hand" Margin="0,8,0,0"
+                                                                MouseLeftButtonDown="BtnGoToBrandKit_Click" HorizontalAlignment="Left">
+                                                            <TextBlock Text="შექმნა ბრენდ-კიტში →" Foreground="{DynamicResource AccentText}" FontSize="11.5" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Intro / Outro -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <CheckBox x:Name="ChkIntroOutro" Style="{StaticResource ToggleSwitch}"
+                                                          Checked="ChkIntroOutro_Changed" Unchecked="ChkIntroOutro_Changed">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                            <Viewbox Width="19" Height="19">
+                                                                <Canvas Width="24" Height="24">
+                                                                    <Rectangle Canvas.Left="2" Canvas.Top="4" Width="20" Height="16" RadiusX="3.5" RadiusY="3.5"
+                                                                               Stroke="{DynamicResource Accent}" StrokeThickness="1.8"/>
+                                                                    <Polygon Points="10,9 16,12 10,15" Fill="{DynamicResource Accent}"/>
+                                                                </Canvas>
+                                                            </Viewbox>
+                                                        </Border>
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="Intro / Outro" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                            <TextBlock Text="ბრენდირებული გახსნა და დახურვა" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </CheckBox>
+                                                <Border x:Name="IntroOutroFields" Visibility="Collapsed" Margin="0,14,0,0" Padding="0,14,0,0"
+                                                        BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+                                                    <StackPanel>
+                                                        <TextBlock x:Name="TxtNoQuickIo"
+                                                                   Text="პრესეტი ჯერ არ გაქვს შენახული"
+                                                                   Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                                        <WrapPanel x:Name="QuickIoChips" Orientation="Horizontal"/>
+                                                        <Border Background="Transparent" Cursor="Hand" Margin="0,8,0,0"
+                                                                MouseLeftButtonDown="BtnGoToBrandKit_Click" HorizontalAlignment="Left">
+                                                            <TextBlock Text="შექმნა ბრენდ-კიტში →" Foreground="{DynamicResource AccentText}" FontSize="11.5" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <TextBlock Text="ᲓᲐᲛᲣᲨᲐᲕᲔᲑᲐ" Style="{StaticResource SectionLabel}" Margin="2,14,0,10"/>
+
+                                        <!-- Speed: three clear options (the processing code reads these radio buttons) -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                        <Viewbox Width="19" Height="19">
+                                                            <Canvas Width="24" Height="24">
+                                                                <Path Data="M13,2 L4,14 L11,14 L10,22 L20,9 L13,9 Z" Fill="{DynamicResource Accent}"/>
+                                                            </Canvas>
+                                                        </Viewbox>
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="დამუშავების სიჩქარე" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                        <TextBlock x:Name="TxtSpeedHint" Text="ოპტიმალური ბალანსი — რეკომენდებულია"
+                                                                   FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"
+                                                                   TextWrapping="Wrap" MaxWidth="230"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <Border Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}"
+                                                        BorderThickness="1" CornerRadius="12" Padding="2" Margin="0,14,0,0">
+                                                    <UniformGrid Columns="3" Rows="1">
+                                                        <RadioButton x:Name="RbAccurate" Style="{StaticResource SpeedSegment}" Checked="SpeedRadio_Checked"
+                                                                     Padding="6,9" ToolTip="მაქსიმალური სიზუსტე და ხარისხი — გამოთვლას მეტი დრო სჭირდება">
+                                                            <StackPanel>
+                                                                <TextBlock Text="ნელი" FontSize="13" HorizontalAlignment="Center"/>
+                                                                <TextBlock Text="სიზუსტე" FontSize="10.5" Opacity="0.7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </RadioButton>
+                                                        <RadioButton x:Name="RbFast" Style="{StaticResource SpeedSegment}" Checked="SpeedRadio_Checked"
+                                                                     IsChecked="True" Padding="6,9"
+                                                                     ToolTip="ოპტიმალური ბალანსი სიჩქარესა და ხარისხს შორის — რეკომენდებულია სტანდარტული სამუშაოსთვის">
+                                                            <StackPanel>
+                                                                <TextBlock Text="ბალანსი" FontSize="13" HorizontalAlignment="Center"/>
+                                                                <TextBlock Text="ოპტიმალური" FontSize="10.5" Opacity="0.7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </RadioButton>
+                                                        <RadioButton x:Name="RbUltraFast" Style="{StaticResource SpeedSegment}" Checked="SpeedRadio_Checked"
+                                                                     Padding="6,9" ToolTip="მაქსიმალურად სწრაფი დამუშავება — შესაფერისია სასწრაფო საინფორმაციო მასალისთვის">
+                                                            <StackPanel>
+                                                                <TextBlock Text="ნიუსრუმი" FontSize="13" HorizontalAlignment="Center"/>
+                                                                <TextBlock Text="სასწრაფო" FontSize="10.5" Opacity="0.7" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </RadioButton>
+                                                    </UniformGrid>
+                                                </Border>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <Button Grid.Row="2" x:Name="BtnPreview" Style="{StaticResource SecondaryButton}"
+                                        Height="48" Margin="0,10,6,0" FontSize="14" Content="5 წმ გადახედვა"
+                                        ToolTip="აჩვენებს 5-წამიან სწრაფ გადახედვას საბოლოო შედეგამდე"
+                                        Visibility="Collapsed" Click="BtnPreview_Click"/>
+                            </Grid>
+                        </Border>
+
+                    </Grid>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 1: მინი მონტაჟი                               -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:EditorView x:Name="TheEditorView" Margin="16,12,16,16" />
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 2: სეთინგები                                  -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="430"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ═══════════ LEFT: general settings ═══════════ -->
+                        <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22,18,22">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Margin="0,0,6,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
+                                        <Path Data="{StaticResource Icon.Settings}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="სეთინგები" FontSize="21" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="გარეგნობა, საქაღალდეები, ხელსაწყოები და მონაცემები"
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                                            BorderThickness="1" CornerRadius="16" Padding="14,7" VerticalAlignment="Center">
+                                        <TextBlock Text="1Flow AiAssistant · v1.0.0" FontSize="12.5" Foreground="{DynamicResource TextSecondary}"/>
+                                    </Border>
+                                </Grid>
+
+                                <ScrollViewer Grid.Row="1" Margin="0,20,0,0" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Margin="0,0,10,0">
+
+                                        <!-- ── გარეგნობა ── -->
+                                        <TextBlock Text="გარეგნობა" Style="{StaticResource SectionLabel}"/>
+                                        <UniformGrid Rows="1" Margin="0,0,0,18">
+                                            <RadioButton x:Name="RbSetDark" GroupName="SetTheme" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,6,0" Click="SetTheme_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="40" Height="40" CornerRadius="11" Background="#0B0D10" Margin="0,0,13,0"
+                                                            BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
+                                                        <TextBlock Text="&#xE708;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                                   Foreground="#E6E8EC" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="მუქი თემა" FontSize="14" FontWeight="Medium"/>
+                                                        <TextBlock Text="თვალებისთვის რბილი" FontSize="11.5"
+                                                                   Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="RbSetLight" GroupName="SetTheme" Style="{StaticResource ModeCard}"
+                                                         Margin="6,0,0,0" Click="SetTheme_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="40" Height="40" CornerRadius="11" Background="#F4F6F9" Margin="0,0,13,0"
+                                                            BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
+                                                        <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                                   Foreground="#15191F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="ღია თემა" FontSize="14" FontWeight="Medium"/>
+                                                        <TextBlock Text="დღის სინათლისთვის" FontSize="11.5"
+                                                                   Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+
+                                        <!-- ── საქაღალდეები ── -->
+                                        <TextBlock Text="საქაღალდეები" Style="{StaticResource SectionLabel}"/>
+
+                                        <Border Style="{StaticResource TileCard}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                    <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                               Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="მთავარი საწყობი" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock x:Name="TxtRootFolder" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button x:Name="BtnSaveGlobalFolder" Style="{StaticResource SecondaryButton}" Content="შეცვლა"
+                                                            Padding="14,8" FontSize="12.5" Click="BtnSaveGlobalFolder_Click"/>
+                                                    <Button Style="{StaticResource ToolButton}" Content="&#xE8A7;" Width="34" Height="34" Margin="6,0,0,0"
+                                                            ToolTip="საქაღალდის გახსნა" Tag="root" Click="BtnOpenFolder_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border Style="{StaticResource TileCard}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                               Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="ჩამოტვირთვები" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock x:Name="TxtSetDownloads" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource SecondaryButton}" Content="შეცვლა" Padding="14,8" FontSize="12.5"
+                                                            Click="BtnSetDownloadFolder_Click"/>
+                                                    <Button Style="{StaticResource ToolButton}" Content="&#xE8A7;" Width="34" Height="34" Margin="6,0,0,0"
+                                                            ToolTip="საქაღალდის გახსნა" Tag="downloads" Click="BtnOpenFolder_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border Style="{StaticResource TileCard}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                    <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                               Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="ლაივ კლიპები" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock x:Name="TxtSetClips" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource SecondaryButton}" Content="შეცვლა" Padding="14,8" FontSize="12.5"
+                                                            Click="BtnSetClipsFolder_Click"/>
+                                                    <Button Style="{StaticResource ToolButton}" Content="&#xE8A7;" Width="34" Height="34" Margin="6,0,0,0"
+                                                            ToolTip="საქაღალდის გახსნა" Tag="clips" Click="BtnOpenFolder_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border Style="{StaticResource TileCard}" Margin="0,0,0,18">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                    <TextBlock Text="&#xE7B8;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                               Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="ქეში (შუალედური ფაილები)" FontSize="14" FontWeight="Medium"
+                                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                                        <Border Background="{DynamicResource BgInput}" CornerRadius="6" Padding="8,2" Margin="10,0,0,0">
+                                                            <TextBlock x:Name="TxtCacheSize" Text="…" FontSize="11" FontFamily="Consolas"
+                                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock x:Name="TxtCacheFolder" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource SecondaryButton}" Content="შეცვლა" Padding="12,8" FontSize="12.5"
+                                                            Click="BtnSetCacheFolder_Click"/>
+                                                    <Button Style="{StaticResource ToolButton}" Content="&#xE777;" Width="34" Height="34" Margin="6,0,0,0"
+                                                            ToolTip="ნაგულისხმევ ადგილზე დაბრუნება" Click="BtnResetCacheFolder_Click"/>
+                                                    <Button Style="{StaticResource DangerButton}" Content="გასუფთავება" Padding="12,8" FontSize="12.5"
+                                                            Margin="6,0,0,0" Click="BtnClearCache_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- ── ხელსაწყოები ── -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="ხელსაწყოები და დამოკიდებულებები" Style="{StaticResource SectionLabel}" Margin="2,0,0,0"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" x:Name="BtnRecheckTools" Style="{StaticResource SecondaryButton}"
+                                                    Content="გადამოწმება" Padding="12,6" FontSize="12" Click="BtnRecheckTools_Click"/>
+                                        </Grid>
+
+                                        <Border Style="{StaticResource TileCard}" Padding="16,6" Margin="0,0,0,18">
+                                            <StackPanel>
+                                                <!-- ffmpeg -->
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="130"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse x:Name="DotFfmpeg" Width="9" Height="9" Fill="{DynamicResource TextMuted}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="ffmpeg" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtToolFfmpeg" Text="მოწმდება…" FontSize="12.5"
+                                                               Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="3" x:Name="BtnUpdateFfmpeg" Style="{StaticResource SecondaryButton}"
+                                                            Content="განახლება" Padding="12,6" FontSize="12" Click="BtnUpdateFfmpeg_Click"/>
+                                                </Grid>
+                                                <Border Height="1" Background="{DynamicResource Border}"/>
+                                                <!-- yt-dlp -->
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="130"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse x:Name="DotYtDlp" Width="9" Height="9" Fill="{DynamicResource TextMuted}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="yt-dlp" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtYtDlpVersion" Text="—" FontSize="12.5" FontFamily="Consolas"
+                                                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="3" x:Name="BtnUpdateYtDlp" Style="{StaticResource SecondaryButton}"
+                                                            Content="განახლება" Padding="12,6" FontSize="12" Click="BtnUpdateYtDlp_Click"/>
+                                                </Grid>
+                                                <TextBlock x:Name="TxtYtDlpStatus" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
+                                                           TextWrapping="Wrap" Margin="35,0,0,8" Visibility="Collapsed"/>
+                                                <Border Height="1" Background="{DynamicResource Border}"/>
+                                                <!-- python -->
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="130"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse x:Name="DotPython" Width="9" Height="9" Fill="{DynamicResource TextMuted}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="Python" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtToolPython" Text="მოწმდება…" FontSize="12.5"
+                                                               Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                                <Border Height="1" Background="{DynamicResource Border}"/>
+                                                <!-- AI -->
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="130"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse x:Name="DotAi" Width="9" Height="9" Fill="{DynamicResource TextMuted}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="AI (ფონი, სახე)" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtToolAi" Text="მოწმდება…" FontSize="12.5"
+                                                               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="3" x:Name="BtnInstallAi" Style="{StaticResource SecondaryButton}"
+                                                            Content="დაყენება" Padding="12,6" FontSize="12" Margin="10,0,0,0"
+                                                            ToolTip="აკლია მოდელები და Python პაკეტები — ჩამოვტვირთავ" Click="BtnInstallAi_Click"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- ── მონაცემები ── -->
+                                        <TextBlock Text="მონაცემები და დიაგნოსტიკა" Style="{StaticResource SectionLabel}"/>
+                                        <Border Style="{StaticResource TileCard}" Margin="0,0,0,10">
+                                            <WrapPanel>
+                                                <Button Style="{StaticResource SecondaryButton}" Content="ისტორიის გასუფთავება"
+                                                        Padding="14,9" FontSize="12.5" Margin="0,0,8,8" Click="BtnClearHistory_Click"/>
+                                                <Button Style="{StaticResource SecondaryButton}" Content="ყველა პრეზეტის წაშლა"
+                                                        Padding="14,9" FontSize="12.5" Margin="0,0,8,8" Click="BtnClearPresets_Click"/>
+                                                <Button Style="{StaticResource SecondaryButton}" Content="შეცდომების ლოგი"
+                                                        Padding="14,9" FontSize="12.5" Margin="0,0,8,8" Click="BtnOpenLog_Click"/>
+                                                <Button Style="{StaticResource SecondaryButton}" Content="პროგრამის საქაღალდე"
+                                                        Padding="14,9" FontSize="12.5" Margin="0,0,8,8" Tag="app" Click="BtnOpenFolder_Click"/>
+                                            </WrapPanel>
+                                        </Border>
+                                        <TextBlock Text="ფაილები (ვიდეოები) არასოდეს იშლება — ისტორია და პრეზეტები მხოლოდ პროგრამის სიებია."
+                                                   FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,0,0,10"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- ═══════════ RIGHT: keyboard shortcuts ═══════════ -->
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="22,22,16,20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Margin="0,0,6,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="მალსახმობები" Style="{StaticResource PanelTitle}"/>
+                                        <TextBlock Text="მონტაჟის ტაბში. დააჭირე „შეცვლა“ და მერე ახალ კლავიშს"
+                                                   FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="ნაგულისხმევი"
+                                            Padding="10,6" FontSize="12" VerticalAlignment="Top" Click="BtnResetShortcuts_Click"/>
+                                </Grid>
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="ShortcutsPanel" Margin="0,0,8,0"/>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 3: გადმოწერა (Downloader)                     -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:DownloaderView x:Name="TheDownloaderView"/>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 4: ბრენდ-კიტი (Brand Kit) — preset workshop   -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="440"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ═══════════ LEFT: live preview ═══════════ -->
+                        <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- header -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
+                                        <Path Data="{StaticResource Icon.Palette}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="ბრენდ-კიტი" FontSize="21" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="ამზადე და შეინახე გრაფიკა, ლოგო და Intro/Outro — გავერტიკალურებაში ერთი დაჭერით გამოიყენება"
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- section tabs -->
+                                <Border Grid.Row="1" Margin="0,18,0,0" HorizontalAlignment="Left"
+                                        Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                                        BorderThickness="1" CornerRadius="12" Padding="3">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="RbBkLt" GroupName="BkTab" IsChecked="True"
+                                                     Style="{StaticResource SpeedSegment}" Content="Lower Third"
+                                                     Padding="16,8" Margin="0" Click="BrandTab_Changed"/>
+                                        <RadioButton x:Name="RbBkWm" GroupName="BkTab" Style="{StaticResource SpeedSegment}"
+                                                     Content="ლოგო / Watermark" Padding="16,8" Margin="0" Click="BrandTab_Changed"/>
+                                        <RadioButton x:Name="RbBkIo" GroupName="BkTab" Style="{StaticResource SpeedSegment}"
+                                                     Content="Intro / Outro" Padding="16,8" Margin="0" Click="BrandTab_Changed"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- preview frame (9:16) -->
+                                <Viewbox Grid.Row="2" Margin="0,16,0,0" Stretch="Uniform">
+                                    <Border x:Name="PvFrame" Width="360" Height="640" CornerRadius="26" ClipToBounds="True"
+                                            BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0.2,0" EndPoint="0.8,1">
+                                                <GradientStop Color="#34456E" Offset="0"/>
+                                                <GradientStop Color="#1B2340" Offset="0.55"/>
+                                                <GradientStop Color="#0C1020" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Grid>
+                                            <!-- sample "person" so the graphics have something to sit on -->
+                                            <Ellipse Width="132" Height="150" Fill="#14FFFFFF" VerticalAlignment="Top"
+                                                     Margin="0,150,0,0"/>
+                                            <Border Width="290" Height="260" CornerRadius="150,150,0,0" Background="#14FFFFFF"
+                                                    VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
+
+                                            <!-- custom full-frame overlay (PNG) -->
+                                            <Image x:Name="PvOverlay" Stretch="Fill" Visibility="Collapsed"/>
+
+                                            <!-- lower third -->
+                                            <Border x:Name="PvLt" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                                    Margin="22,0,22,150" MinWidth="170" MaxWidth="316" CornerRadius="4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Rectangle x:Name="PvLtBar" Width="6" Fill="White"/>
+                                                    <StackPanel Grid.Column="1" Margin="14,10,16,11">
+                                                        <TextBlock x:Name="PvLtName" Text="სახელი გვარი" FontSize="22" FontWeight="Bold"
+                                                                   Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock x:Name="PvLtDesc" Text="თანამდებობა / აღწერა" FontSize="13.5"
+                                                                   Foreground="#DDFFFFFF" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- watermark -->
+                                            <Image x:Name="PvWm" Stretch="Uniform" Width="54" Margin="16"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            <Border x:Name="PvWmEmpty" Width="54" Height="34" Margin="16" CornerRadius="6"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                    BorderBrush="#88FFFFFF" BorderThickness="1.5" Background="#22FFFFFF">
+                                                <TextBlock Text="LOGO" FontSize="11" FontWeight="Bold" Foreground="#CCFFFFFF"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <!-- intro/outro stinger card -->
+                                            <Grid x:Name="PvStinger" Visibility="Collapsed">
+                                                <Border x:Name="PvStingerBg" Background="#E5202E"/>
+                                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <Image x:Name="PvStLogo" Width="170" MaxHeight="130" Stretch="Uniform"
+                                                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                    <TextBlock x:Name="PvStText" Text="1TV" FontSize="54" FontWeight="Black"
+                                                               Foreground="White" HorizontalAlignment="Center"/>
+                                                    <TextBlock x:Name="PvStCaption" Text="INTRO · OUTRO" FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="#CCFFFFFF" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </Viewbox>
+
+                                <TextBlock Grid.Row="3" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           Text="მიახლოებითი ნახვა — საბოლოო ვიდეოში გრაფიკა ზუსტად ამ პარამეტრებით გამოჩნდება"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- ═══════════ RIGHT: editors ═══════════ -->
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="20,20,14,18">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <Grid Margin="0,0,6,0">
+
+                                    <!-- ══════════ LOWER THIRD ══════════ -->
+                                    <StackPanel x:Name="BkLtEditor">
+                                        <TextBlock Text="Lower Third / გრაფიკა" Style="{StaticResource PanelTitle}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="სახელის და თანამდებობის პლაშკა ვიდეოს ქვედა ნაწილში" FontSize="12.5"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="თემფლეითი" Style="{StaticResource SectionLabel}"/>
+                                        <UniformGrid Columns="3" Margin="0,0,0,4">
+                                            <RadioButton x:Name="TmplClassic" GroupName="LTTemplate" IsChecked="True"
+                                                         Style="{StaticResource ModeCard}" Margin="0,0,6,6" Checked="Template_Changed">
+                                                <StackPanel>
+                                                    <Border Height="30" CornerRadius="5" Background="#1C1F26" Margin="0,0,0,7">
+                                                        <Grid><Rectangle Fill="White" Width="3" HorizontalAlignment="Left"/>
+                                                            <StackPanel VerticalAlignment="Center" Margin="9,0,4,0">
+                                                                <Rectangle Fill="White" Height="3" Width="34" HorizontalAlignment="Left" Margin="0,0,0,3"/>
+                                                                <Rectangle Fill="#99FFFFFF" Height="2" Width="22" HorizontalAlignment="Left"/>
+                                                            </StackPanel></Grid>
+                                                    </Border>
+                                                    <TextBlock Text="1TV Classic" FontSize="11.5" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="TmplDark" GroupName="LTTemplate" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,6,6" Checked="Template_Changed">
+                                                <StackPanel>
+                                                    <Border Height="30" CornerRadius="5" Background="#0F163A" Margin="0,0,0,7">
+                                                        <Grid><Rectangle Fill="#1464E6" Width="3" HorizontalAlignment="Left"/>
+                                                            <StackPanel VerticalAlignment="Center" Margin="9,0,4,0">
+                                                                <Rectangle Fill="White" Height="3" Width="34" HorizontalAlignment="Left" Margin="0,0,0,3"/>
+                                                                <Rectangle Fill="#AAB4D4FF" Height="2" Width="22" HorizontalAlignment="Left"/>
+                                                            </StackPanel></Grid>
+                                                    </Border>
+                                                    <TextBlock Text="Dark Pro" FontSize="11.5" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="TmplRed" GroupName="LTTemplate" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,0,6" Checked="Template_Changed">
+                                                <StackPanel>
+                                                    <Border Height="30" CornerRadius="5" Background="#C0121C" Margin="0,0,0,7">
+                                                        <Grid><Rectangle Fill="White" Width="3" HorizontalAlignment="Left"/>
+                                                            <StackPanel VerticalAlignment="Center" Margin="9,0,4,0">
+                                                                <Rectangle Fill="White" Height="3" Width="34" HorizontalAlignment="Left" Margin="0,0,0,3"/>
+                                                                <Rectangle Fill="#AAFFDDDD" Height="2" Width="22" HorizontalAlignment="Left"/>
+                                                            </StackPanel></Grid>
+                                                    </Border>
+                                                    <TextBlock Text="Breaking" FontSize="11.5" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="TmplMinimal" GroupName="LTTemplate" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,6,0" Checked="Template_Changed">
+                                                <StackPanel>
+                                                    <Border Height="30" CornerRadius="5" Background="#55000000" Margin="0,0,0,7">
+                                                        <Grid><Rectangle Fill="#DCAF1E" Width="3" HorizontalAlignment="Left"/>
+                                                            <StackPanel VerticalAlignment="Center" Margin="9,0,4,0">
+                                                                <Rectangle Fill="White" Height="3" Width="34" HorizontalAlignment="Left" Margin="0,0,0,3"/>
+                                                                <Rectangle Fill="#AADCC896" Height="2" Width="22" HorizontalAlignment="Left"/>
+                                                            </StackPanel></Grid>
+                                                    </Border>
+                                                    <TextBlock Text="Minimal" FontSize="11.5" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="TmplCustom" GroupName="LTTemplate" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,6,0" Checked="Template_Changed">
+                                                <StackPanel>
+                                                    <Border Height="30" CornerRadius="5" Background="{DynamicResource BgInput}"
+                                                            BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" Margin="0,0,0,7">
+                                                        <TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                                   Foreground="{DynamicResource TextSecondary}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="Custom PNG" FontSize="11.5" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+
+                                        <!-- custom overlay file -->
+                                        <Border x:Name="CustomOverlayPanel" Visibility="Collapsed" Style="{StaticResource TileCard}"
+                                                Margin="0,6,0,10">
+                                            <StackPanel>
+                                                <TextBlock Text="After Effects / Premiere-დან გაიტანე PNG (მთელი კადრი, alpha-თი) და ჩატვირთე აქ."
+                                                           FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"
+                                                           Margin="0,0,0,10"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="8"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="TxtOverlayPath" IsReadOnly="True" FontSize="12" Height="38"
+                                                             local:Ui.Hint="overlay.png ფაილი არ არის არჩეული"
+                                                             TextChanged="BrandPreview_TextChanged"/>
+                                                    <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="არჩევა"
+                                                            Padding="14,0" Height="38" FontSize="12.5" Click="BtnBrowseOverlay_Click"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- name / description -->
+                                        <TextBlock Text="ტექსტი" Style="{StaticResource SectionLabel}" Margin="2,12,0,10"/>
+                                        <TextBox x:Name="TxtLTName" Height="44" FontSize="14" local:Ui.Hint="სახელი გვარი — მაგ: გიორგი ბერიძე"
+                                                 TextChanged="BrandPreview_TextChanged" Margin="0,0,0,8"/>
+                                        <TextBox x:Name="TxtLTDesc" Height="44" FontSize="14" local:Ui.Hint="თანამდებობა — მაგ: პრემიერ-მინისტრი"
+                                                 TextChanged="BrandPreview_TextChanged" Margin="0,0,0,4"/>
+
+                                        <!-- duration -->
+                                        <TextBlock Text="ხანგრძლივობა ვიდეოში" Style="{StaticResource SectionLabel}" Margin="2,14,0,10"/>
+                                        <Border Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                                                BorderThickness="1" CornerRadius="12" Padding="3" HorizontalAlignment="Left">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton x:Name="RbDurFull" GroupName="LtDur" IsChecked="True"
+                                                             Style="{StaticResource SpeedSegment}" Content="მთელ ვიდეოზე"
+                                                             Padding="14,8" Margin="0" Click="DurMode_Changed"/>
+                                                <RadioButton x:Name="RbDurCustom" GroupName="LtDur" Style="{StaticResource SpeedSegment}"
+                                                             Content="კონკრეტული დრო" Padding="14,8" Margin="0" Click="DurMode_Changed"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border x:Name="DurationSliderPanel" Visibility="Collapsed" Style="{StaticResource TileCard}"
+                                                Margin="0,10,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider x:Name="SlDuration" Minimum="2" Maximum="30" Value="5" TickFrequency="1"
+                                                        IsSnapToTickEnabled="True" ValueChanged="SlDuration_Changed" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" x:Name="TxtDurValue" Text="5 წმ" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource AccentText}" MinWidth="46" TextAlignment="Right"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- presets -->
+                                        <Grid Margin="2,20,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="შენახული პრეზეტები" Style="{StaticResource SectionLabel}" Margin="0"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" x:Name="BtnSavePreset" Style="{StaticResource SecondaryButton}"
+                                                    Padding="12,6" FontSize="12" Click="BtnSavePreset_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,7,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="შენახვა" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                        <Border x:Name="SavePresetPanel" Visibility="Collapsed" Style="{StaticResource TileCard}" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="8"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="6"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="TxtPresetLabel" Height="38" FontSize="13" local:Ui.Hint="პრეზეტის სახელი"/>
+                                                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="შენახვა"
+                                                        Padding="14,0" Height="38" FontSize="12.5" Click="BtnConfirmSavePreset_Click"/>
+                                                <Button Grid.Column="4" Style="{StaticResource GhostButton}" Content="&#xE711;"
+                                                        FontFamily="Segoe MDL2 Assets" Width="38" Height="38" Padding="0"
+                                                        Click="BtnCancelSavePreset_Click"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <Border x:Name="PresetSearchBorder" Visibility="Collapsed" Margin="0,0,0,10" Height="42"
+                                                CornerRadius="12" Background="{DynamicResource BgInput}"
+                                                BorderBrush="{DynamicResource Border}" BorderThickness="1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBox Grid.Column="1" x:Name="TxtPresetSearch" Background="Transparent" BorderThickness="0"
+                                                         Padding="0" FontSize="13" local:Ui.Hint="პრეზეტის ძებნა…"
+                                                         VerticalContentAlignment="Center" TextChanged="TxtPresetSearch_TextChanged"/>
+                                                <Border Grid.Column="2" x:Name="SearchCountBadge" Visibility="Collapsed" CornerRadius="7"
+                                                        Padding="8,3" Margin="0,0,6,0" VerticalAlignment="Center"
+                                                        Background="{DynamicResource AccentSoft}">
+                                                    <TextBlock x:Name="TxtSearchCount" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentText}"/>
+                                                </Border>
+                                                <Border Grid.Column="3" x:Name="BtnClearPresetSearch" Visibility="Collapsed" Width="26"
+                                                        Height="26" CornerRadius="13" Margin="0,0,8,0" Cursor="Hand"
+                                                        Background="{DynamicResource BgHover}" VerticalAlignment="Center"
+                                                        MouseLeftButtonDown="BtnClearPresetSearch_Click">
+                                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                                               Foreground="{DynamicResource TextSecondary}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock x:Name="TxtNoPresets" FontSize="12.5" Foreground="{DynamicResource TextMuted}"
+                                                   TextWrapping="Wrap" Margin="2,2,0,0"/>
+                                        <WrapPanel x:Name="PresetsPanel" Orientation="Horizontal" Margin="0,0,0,20"/>
+                                    </StackPanel>
+
+                                    <!-- ══════════ WATERMARK ══════════ -->
+                                    <StackPanel x:Name="BkWmEditor" Visibility="Collapsed">
+                                        <TextBlock Text="ლოგო / Watermark" Style="{StaticResource PanelTitle}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="PNG ლოგო, რომელიც ვიდეოს კუთხეში დაემატება" FontSize="12.5"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="ფაილი" Style="{StaticResource SectionLabel}"/>
+                                        <Grid Margin="0,0,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtWmPath" IsReadOnly="True" FontSize="12" Height="40"
+                                                     local:Ui.Hint="logo.png (alpha-თი) არ არის არჩეული"
+                                                     TextChanged="BrandPreview_TextChanged"/>
+                                            <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="არჩევა"
+                                                    Padding="14,0" Height="40" FontSize="12.5" Click="BtnBrowseWm_Click"/>
+                                        </Grid>
+
+                                        <TextBlock Text="პოზიცია" Style="{StaticResource SectionLabel}" Margin="2,14,0,10"/>
+                                        <UniformGrid Columns="2">
+                                            <RadioButton x:Name="WmTL" GroupName="WmPos" Style="{StaticResource ModeCard}" Margin="0,0,6,6"
+                                                         Click="BrandPreview_Changed">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#x2196;" FontSize="16" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="ზედა მარცხნივ" FontSize="12.5" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="WmTR" GroupName="WmPos" IsChecked="True" Style="{StaticResource ModeCard}"
+                                                         Margin="0,0,0,6" Click="BrandPreview_Changed">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#x2197;" FontSize="16" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="ზედა მარჯვნივ" FontSize="12.5" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="WmBL" GroupName="WmPos" Style="{StaticResource ModeCard}" Margin="0,0,6,0"
+                                                         Click="BrandPreview_Changed">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#x2199;" FontSize="16" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="ქვედა მარცხნივ" FontSize="12.5" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="WmBR" GroupName="WmPos" Style="{StaticResource ModeCard}" Margin="0"
+                                                         Click="BrandPreview_Changed">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#x2198;" FontSize="16" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="ქვედა მარჯვნივ" FontSize="12.5" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+
+                                        <Border Style="{StaticResource TileCard}" Margin="0,14,0,0">
+                                            <StackPanel>
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="46"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="ზომა" FontSize="13" Foreground="{DynamicResource TextSecondary}"
+                                                               VerticalAlignment="Center"/>
+                                                    <Slider Grid.Column="1" x:Name="SlWmSize" Minimum="5" Maximum="40" Value="15"
+                                                            ValueChanged="SlWmSize_Changed" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtWmSize" Text="15%" FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="46"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="გამჭვირვ." FontSize="13" Foreground="{DynamicResource TextSecondary}"
+                                                               VerticalAlignment="Center"/>
+                                                    <Slider Grid.Column="1" x:Name="SlWmOpacity" Minimum="10" Maximum="100" Value="100"
+                                                            ValueChanged="SlWmOpacity_Changed" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" x:Name="TxtWmOpacity" Text="100%" FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Grid Margin="2,20,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="შენახული პრეზეტები" Style="{StaticResource SectionLabel}" Margin="0"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="12"
+                                                    Click="BtnSaveWmPreset_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,7,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="შენახვა" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                        <Border x:Name="SaveWmPresetPanel" Visibility="Collapsed" Style="{StaticResource TileCard}" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="8"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="6"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="TxtWmPresetLabel" Height="38" FontSize="13" local:Ui.Hint="მაგ: 1TV ლოგო"/>
+                                                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="შენახვა"
+                                                        Padding="14,0" Height="38" FontSize="12.5" Click="BtnConfirmSaveWmPreset_Click"/>
+                                                <Button Grid.Column="4" Style="{StaticResource GhostButton}" Content="&#xE711;"
+                                                        FontFamily="Segoe MDL2 Assets" Width="38" Height="38" Padding="0"
+                                                        Click="BtnCancelSaveWmPreset_Click"/>
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock x:Name="TxtNoWmPresets" Text="ლოგოს პრეზეტი ჯერ არ გაქვს — დააყენე პარამეტრები და დააჭირე „შენახვა“."
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,2,0,0"/>
+                                        <WrapPanel x:Name="WmPresetsPanel" Orientation="Horizontal" Margin="0,0,0,20"/>
+                                    </StackPanel>
+
+                                    <!-- ══════════ INTRO / OUTRO ══════════ -->
+                                    <StackPanel x:Name="BkIoEditor" Visibility="Collapsed">
+                                        <TextBlock Text="Intro / Outro" Style="{StaticResource PanelTitle}" Margin="0,0,0,2"/>
+                                        <TextBlock Text="მოკლე ბრენდირებული სტინგერი ვიდეოს დასაწყისში და ბოლოს" FontSize="12.5"
+                                                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,16"/>
+
+                                        <TextBlock Text="შაბლონი" Style="{StaticResource SectionLabel}"/>
+                                        <ComboBox x:Name="CmbStingerTemplate" SelectedIndex="0" Height="46" FontSize="13.5"
+                                                  VerticalContentAlignment="Center" SelectionChanged="CmbStingerTemplate_Changed">
+                                            <ComboBoxItem Content="🔴  წითელი ფლეში"/>
+                                            <ComboBoxItem Content="⬛  შავი მინიმალური"/>
+                                            <ComboBoxItem Content="🌑  ანთრაციტი (1TV)"/>
+                                            <ComboBoxItem Content="📁  საკუთარი ფაილი (Premiere / After Effects)"/>
+                                        </ComboBox>
+                                        <TextBlock Text="ლოგო (ლოგოს ჩანართში არჩეული) ავტომატურად დაემატება შაბლონს."
+                                                   FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"
+                                                   Margin="2,8,0,0"/>
+
+                                        <TextBlock Text="სად დაემატოს" Style="{StaticResource SectionLabel}" Margin="2,16,0,10"/>
+                                        <Border Style="{StaticResource TileCard}" Margin="0,0,0,8">
+                                            <CheckBox x:Name="ChkApplyIntro" Style="{StaticResource ToggleSwitch}" IsChecked="True" Click="BrandPreview_Changed">
+                                                <TextBlock Text="დასაწყისში (Intro)" FontSize="14" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimary}"/>
+                                            </CheckBox>
+                                        </Border>
+                                        <Border Style="{StaticResource TileCard}" Margin="0,0,0,4">
+                                            <CheckBox x:Name="ChkApplyOutro" Style="{StaticResource ToggleSwitch}" IsChecked="True" Click="BrandPreview_Changed">
+                                                <TextBlock Text="ბოლოს (Outro)" FontSize="14" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimary}"/>
+                                            </CheckBox>
+                                        </Border>
+
+                                        <Border x:Name="StingerDurationPanel" Style="{StaticResource TileCard}" Margin="0,10,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="112"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="54"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="ხანგრძლივობა" FontSize="13" Foreground="{DynamicResource TextSecondary}"
+                                                           VerticalAlignment="Center"/>
+                                                <Slider Grid.Column="1" x:Name="SlStingerDuration" Minimum="1" Maximum="5" Value="2"
+                                                        ValueChanged="SlStingerDuration_Changed" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" x:Name="TxtStingerDuration" Text="2.0წმ" FontSize="13"
+                                                           FontWeight="SemiBold" Foreground="{DynamicResource AccentText}"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel x:Name="CustomStingerPanel" Visibility="Collapsed" Margin="0,10,0,0">
+                                            <Border Style="{StaticResource TileCard}" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Intro ფაილი (.mp4)" FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                                               Margin="0,0,0,7"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="8"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBox x:Name="TxtCustomIntroPath" IsReadOnly="True" FontSize="12" Height="38"
+                                                                 local:Ui.Hint="ფაილი არ არის არჩეული"/>
+                                                        <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="არჩევა"
+                                                                Padding="14,0" Height="38" FontSize="12.5" Click="BtnBrowseCustomIntro_Click"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Style="{StaticResource TileCard}" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="Outro ფაილი (.mp4)" FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                                               Margin="0,0,0,7"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="8"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBox x:Name="TxtCustomOutroPath" IsReadOnly="True" FontSize="12" Height="38"
+                                                                 local:Ui.Hint="ფაილი არ არის არჩეული"/>
+                                                        <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="არჩევა"
+                                                                Padding="14,0" Height="38" FontSize="12.5" Click="BtnBrowseCustomOutro_Click"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Text="რეკომენდებულია 9:16 ვერტიკალური ექსპორტი — სხვა პროპორცია ავტომატურად მოერგება."
+                                                       FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,0,0,0"/>
+                                        </StackPanel>
+
+                                        <Grid Margin="2,20,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="შენახული პრეზეტები" Style="{StaticResource SectionLabel}" Margin="0"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1" x:Name="BtnSaveIoPreset" Style="{StaticResource SecondaryButton}"
+                                                    Padding="12,6" FontSize="12" Click="BtnSaveIoPreset_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,7,0"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="შენახვა" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                        <Border x:Name="SaveIoPresetPanel" Visibility="Collapsed" Style="{StaticResource TileCard}" Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="8"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="6"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="TxtIoPresetLabel" Height="38" FontSize="13" local:Ui.Hint="მაგ: ახალი ამბები Intro"/>
+                                                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Content="შენახვა"
+                                                        Padding="14,0" Height="38" FontSize="12.5" Click="BtnConfirmSaveIoPreset_Click"/>
+                                                <Button Grid.Column="4" Style="{StaticResource GhostButton}" Content="&#xE711;"
+                                                        FontFamily="Segoe MDL2 Assets" Width="38" Height="38" Padding="0"
+                                                        Click="BtnCancelSaveIoPreset_Click"/>
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock x:Name="TxtNoIoPresets" Text="Intro/Outro პრეზეტი ჯერ არ გაქვს — დააყენე პარამეტრები და დააჭირე „შენახვა“."
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,2,0,0"/>
+                                        <WrapPanel x:Name="IoPresetsPanel" Orientation="Horizontal" Margin="0,0,0,20"/>
+                                    </StackPanel>
+
+                                </Grid>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 5: მედია ბიბლიოთეკა (Media Library)           -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:MediaLibraryView x:Name="TheMediaLibrary"/>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 6: AI ვირტუალური ფონი (Virtual Studio)       -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="410"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ═══════════ LEFT PANEL: video + preview + action ═══════════ -->
+                        <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22"
+                                AllowDrop="True"
+                                DragEnter="VbgArea_DragEnter" DragOver="VbgArea_DragOver"
+                                DragLeave="VbgArea_DragLeave" Drop="VbgArea_Drop">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
+                                        <Path Data="{StaticResource Icon.Wallpaper}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="AI ფონი" FontSize="21" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="ფონის შეცვლა მწვანე ეკრანის გარეშე — AI ადამიანს ცალკე გამოჭრის"
+                                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                                            BorderThickness="1" CornerRadius="16" Padding="12,5" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="DotVbgAi" Width="8" Height="8" Fill="{DynamicResource TextMuted}"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtVbgAiStatus" Text="AI მოწმდება…" FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Content: drop zone / preview -->
+                                <Grid Grid.Row="1" Margin="0,18,0,14">
+
+                                    <!-- empty state -->
+                                    <Grid x:Name="VbgDropZone">
+                                        <Rectangle RadiusX="16" RadiusY="16" Fill="{DynamicResource BgCard}"
+                                                   Stroke="{DynamicResource BorderStrong}" StrokeThickness="1.2"
+                                                   StrokeDashArray="5 5" IsHitTestVisible="False"/>
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Grid Width="92" Height="92" HorizontalAlignment="Center">
+                                                <Ellipse Fill="{DynamicResource AccentSoft}"/>
+                                                <Ellipse Stroke="{DynamicResource AccentBorder}" StrokeThickness="1" Margin="10"/>
+                                                <TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="32"
+                                                           Foreground="{DynamicResource Accent}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <TextBlock Text="ჩააგდე ვიდეო აქ" FontSize="18" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                                            <TextBlock Text="ან აირჩიე ფაილი — AI ადამიანს გამოჭრის და ფონს შეუცვლის" FontSize="12.5"
+                                                       Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                                            <Button Style="{StaticResource SecondaryButton}" Content="ვიდეოს არჩევა"
+                                                    Click="BtnVbgPickInput_Click" HorizontalAlignment="Center"
+                                                    Padding="22,11" Margin="0,22,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- preview -->
+                                    <Border x:Name="VbgPreviewBox" Visibility="Collapsed" Background="{DynamicResource VideoBg}"
+                                            CornerRadius="14" ClipToBounds="True">
+                                        <Grid>
+                                            <Image x:Name="VbgPreviewImage" Stretch="Uniform"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                                            <!-- original / result switch -->
+                                            <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,14,0,0"
+                                                    Background="#CC0B0D10" CornerRadius="11" Padding="3">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <RadioButton x:Name="VbgViewOriginal" GroupName="VbgView" IsChecked="True"
+                                                                 Style="{StaticResource SpeedSegment}" Content="ორიგინალი"
+                                                                 Padding="12,6" FontSize="12" Margin="0"
+                                                                 Click="VbgView_Changed"/>
+                                                    <RadioButton x:Name="VbgViewResult" GroupName="VbgView"
+                                                                 Style="{StaticResource SpeedSegment}" Content="შედეგი"
+                                                                 Padding="12,6" FontSize="12" Margin="0"
+                                                                 Click="VbgView_Changed"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0"
+                                                    Style="{StaticResource SecondaryButton}" Content="ვიდეოს შეცვლა"
+                                                    Padding="12,7" FontSize="12" Click="BtnVbgPickInput_Click"/>
+
+                                            <!-- busy -->
+                                            <Border x:Name="VbgBusy" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                                    Margin="0,0,0,18" Background="#E60E1115" CornerRadius="18" Padding="16,9">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                               Foreground="{DynamicResource Accent}" Margin="0,1,10,0" VerticalAlignment="Center"/>
+                                                    <TextBlock x:Name="TxtVbgBusy" Text="AI ანალიზი…" FontSize="12.5" Foreground="#E6E8EC"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- drag overlay -->
+                                    <Border x:Name="VbgDragOverlay" Background="{DynamicResource AccentSoft}"
+                                            BorderBrush="{DynamicResource Accent}" BorderThickness="2" CornerRadius="16"
+                                            Visibility="Collapsed" IsHitTestVisible="False">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="38"
+                                                       Foreground="{DynamicResource Accent}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="გაუშვი ვიდეო აქ" Foreground="{DynamicResource TextPrimary}" FontSize="17"
+                                                       FontWeight="SemiBold" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Action bar -->
+                                <Border Grid.Row="2" Style="{StaticResource TileCard}" Margin="0" Padding="12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="46" Height="46" CornerRadius="12" Background="{DynamicResource BgInput}"
+                                                BorderBrush="{DynamicResource Border}" BorderThickness="1" Margin="0,0,14,0">
+                                            <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtVbgInputPath" Text="ვიდეო არ არის არჩეული" FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock x:Name="TxtVbgInputMeta" Text="აირჩიე ვიდეო ან გადმოიტანე აქ" FontSize="12"
+                                                       Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" x:Name="BtnVbgPreview" Style="{StaticResource SecondaryButton}"
+                                                Height="48" Padding="20,0" FontSize="13.5" Margin="14,0,8,0" IsEnabled="False"
+                                                ToolTip="ერთი კადრი ამ პარამეტრებით — სანამ მთელ ვიდეოს დაამუშავებ"
+                                                Click="BtnVbgPreview_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="გადახედვა" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Column="3" x:Name="BtnVbgProcess" Style="{StaticResource GlowPrimaryButton}"
+                                                Height="48" Padding="24,0" FontSize="14" IsEnabled="False"
+                                                ToolTip="ვიდეოს ფონს შეუცვლის და ახალ ფაილად შეინახავს"
+                                                Click="BtnVbgProcess_Click">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="ფონის შეცვლა" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Status -->
+                                <Grid Grid.Row="3" Margin="2,12,2,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource Success}" VerticalAlignment="Top" Margin="0,5,9,0"/>
+                                        <TextBlock x:Name="TxtVbgStatus" Text="მზად არის სამუშაოდ" FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" MaxWidth="760"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <Button x:Name="BtnVbgCompare" Style="{StaticResource GhostButton}"
+                                                Content="A/B შედარება" FontSize="12" Padding="12,6" Margin="0,0,6,0"
+                                                Visibility="Collapsed" Click="BtnVbgCompare_Click"/>
+                                        <Button x:Name="BtnVbgReveal" Style="{StaticResource GhostButton}"
+                                                Content="ფოლდერში ჩვენება" FontSize="12" Padding="12,6" Visibility="Collapsed"
+                                                Click="BtnVbgReveal_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- ═══════════ RIGHT PANEL: background + options ═══════════ -->
+                        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="22,22,16,20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Margin="0,0,6,16">
+                                    <TextBlock Text="ახალი ფონი" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <TextBlock Text="რით შევცვალოთ არსებული ფონი" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,0">
+                                    <StackPanel>
+
+                                        <!-- mode cards -->
+                                        <UniformGrid Columns="2">
+                                            <RadioButton x:Name="VbgModeBlur" Style="{StaticResource ModeCard}" GroupName="VbgMode"
+                                                         IsChecked="True" Click="VbgMode_Changed" Margin="0,0,5,10">
+                                                <StackPanel>
+                                                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource BgInput}" HorizontalAlignment="Left">
+                                                        <Grid Width="18" Height="18">
+                                                            <Ellipse Stroke="{DynamicResource Accent}" StrokeThickness="1.8" Opacity="0.45"/>
+                                                            <Ellipse Margin="4" Stroke="{DynamicResource Accent}" StrokeThickness="1.8" Opacity="0.75"/>
+                                                            <Ellipse Margin="8" Fill="{DynamicResource Accent}"/>
+                                                        </Grid>
+                                                    </Border>
+                                                    <TextBlock Text="Blur" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                                                    <TextBlock Text="დაბუნდოვნება" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="VbgModeColor" Style="{StaticResource ModeCard}" GroupName="VbgMode"
+                                                         Click="VbgMode_Changed" Margin="5,0,0,10">
+                                                <StackPanel>
+                                                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource BgInput}" HorizontalAlignment="Left">
+                                                        <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                                                   Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="ფერი" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                                                    <TextBlock Text="ერთფერი ფონი" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="VbgModeImage" Style="{StaticResource ModeCard}" GroupName="VbgMode"
+                                                         Click="VbgMode_Changed" Margin="0,0,5,0">
+                                                <StackPanel>
+                                                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource BgInput}" HorizontalAlignment="Left">
+                                                        <TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                                                   Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="სურათი" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                                                    <TextBlock Text="სტუდიის ფონი" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton x:Name="VbgModeVideo" Style="{StaticResource ModeCard}" GroupName="VbgMode"
+                                                         Click="VbgMode_Changed" Margin="5,0,0,0">
+                                                <StackPanel>
+                                                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource BgInput}" HorizontalAlignment="Left">
+                                                        <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                                                   Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="ვიდეო" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                                                    <TextBlock Text="მოძრავი ფონი" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+
+                                        <!-- Blur strength -->
+                                        <Border x:Name="VbgBlurPanel" Style="{StaticResource TileCard}" Margin="0,14,0,10">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <TextBlock Text="დაბუნდოვნების სიძლიერე" FontSize="13" Foreground="{DynamicResource TextPrimary}"/>
+                                                    <TextBlock x:Name="TxtVbgBlur" Text="35" FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                                <Slider x:Name="SlVbgBlur" Minimum="11" Maximum="71" Value="35" TickFrequency="2"
+                                                        IsSnapToTickEnabled="True" ValueChanged="SlVbgBlur_Changed" Margin="0,12,0,0"/>
+                                                <Grid Margin="0,4,0,0">
+                                                    <TextBlock Text="მსუბუქი" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                    <TextBlock Text="ძლიერი" FontSize="11" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Color -->
+                                        <Border x:Name="VbgColorPanel" Style="{StaticResource TileCard}" Margin="0,14,0,10" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <TextBlock Text="ფერი" FontSize="13" Foreground="{DynamicResource TextPrimary}"/>
+                                                <Grid Margin="0,12,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="46"/>
+                                                        <ColumnDefinition Width="10"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border x:Name="VbgColorSwatch" Background="{DynamicResource Accent}" CornerRadius="10" Height="40"
+                                                            BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1"/>
+                                                    <TextBox Grid.Column="2" x:Name="TxtVbgColor" Text="#E5202E" FontSize="13.5" Foreground="{DynamicResource TextPrimary}"
+                                                             VerticalContentAlignment="Center" Height="40"
+                                                             TextChanged="TxtVbgColor_TextChanged"/>
+                                                </Grid>
+                                                <WrapPanel Margin="0,12,0,0" x:Name="VbgSwatches">
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#E5202E" Background="#E5202E" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="1TV წითელი"/>
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#15191F" Background="#15191F" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="მუქი"/>
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#0B2A5B" Background="#0B2A5B" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="ღრმა ლურჯი"/>
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#2F3A4A" Background="#2F3A4A" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="ნახშირისფერი"/>
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#F2F3F5" Background="#F2F3F5" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="თეთრი"/>
+                                                    <Border Width="30" Height="30" CornerRadius="9" Margin="0,0,8,6" Cursor="Hand" Tag="#00B140" Background="#00B140" MouseLeftButtonDown="VbgSwatch_Click" BorderBrush="{DynamicResource BorderStrong}" BorderThickness="1" ToolTip="მწვანე (Chroma)"/>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Image / video file -->
+                                        <Border x:Name="VbgFilePanel" Style="{StaticResource TileCard}" Margin="0,14,0,10" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtVbgFileLabel" Text="ფონის ფაილი" FontSize="13" Foreground="{DynamicResource TextPrimary}"/>
+                                                <Grid Margin="0,12,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="8"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}"
+                                                            BorderThickness="1" CornerRadius="9" Padding="12,0" Height="40">
+                                                        <TextBlock x:Name="TxtVbgFilePath" Text="ფაილი არ არის არჩეული…" FontSize="12.5"
+                                                                   Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </Border>
+                                                    <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="არჩევა"
+                                                            Height="40" Padding="16,0" Click="BtnVbgPickBgFile_Click"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <TextBlock Text="ᲞᲐᲠᲐᲛᲔᲢᲠᲔᲑᲘ" Style="{StaticResource SectionLabel}" Margin="2,10,0,10"/>
+
+                                        <!-- invert -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <CheckBox x:Name="ChkVbgInvert" Style="{StaticResource ToggleSwitch}" Click="VbgOption_Changed">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                        <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                                   Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="შებრუნებული ეფექტი" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                        <TextBlock Text="ადამიანი იცვლება, ფონი რჩება" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </Border>
+
+                                        <!-- live camera -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Width="40" Height="40" CornerRadius="11" Background="{DynamicResource AccentSoft}" Margin="0,0,13,0">
+                                                        <TextBlock Text="&#xE722;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                                   Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="კამერა (Live)" FontSize="14" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                                        <TextBlock Text="ცოცხალი ეფექტი კამერაზე" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" x:Name="BtnVbgLivePreview" Style="{StaticResource SecondaryButton}"
+                                                        Content="გაშვება" Padding="16,9" FontSize="12.5" Click="BtnVbgLivePreview_Click"
+                                                        ToolTip="გახსნის კამერის ფანჯარას (დახურვა: ESC)"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock Text="ᲞᲠᲔᲖᲔᲢᲔᲑᲘ" Style="{StaticResource SectionLabel}" Margin="2,10,0,10"/>
+
+                                        <!-- presets -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="8"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="TxtVbgPresetName" Height="40" VerticalContentAlignment="Center"
+                                                             ToolTip="პრეზეტის სახელი"/>
+                                                    <TextBlock Text="პრეზეტის სახელი…" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                               FontSize="13" Foreground="{DynamicResource TextMuted}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Text, ElementName=TxtVbgPresetName}" Value="">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="შენახვა"
+                                                            Height="40" Padding="16,0" Click="BtnVbgSavePreset_Click"/>
+                                                </Grid>
+                                                <ListBox x:Name="LstVbgPresets" MaxHeight="140" Margin="0,10,0,0"
+                                                         SelectionChanged="LstVbgPresets_SelectionChanged"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <TextBlock Text="BATCH" Style="{StaticResource SectionLabel}" Margin="2,10,0,10"/>
+
+                                        <!-- batch -->
+                                        <Border Style="{StaticResource TileCard}">
+                                            <StackPanel>
+                                                <TextBlock Text="რამდენიმე ვიდეო ერთი პარამეტრებით" FontSize="13" Foreground="{DynamicResource TextPrimary}"/>
+                                                <StackPanel x:Name="VbgBatchPanel" Margin="0,10,0,0"/>
+                                                <Button Style="{StaticResource SecondaryButton}" Content="+ ვიდეოების დამატება"
+                                                        Margin="0,10,0,0" Height="40" Click="BtnVbgAddBatch_Click"/>
+                                                <Button x:Name="BtnVbgProcessBatch" Style="{StaticResource PrimaryButton}"
+                                                        Content="ყველას დამუშავება" Margin="0,8,0,0" Height="42"
+                                                        IsEnabled="False" Click="BtnVbgProcessBatch_Click"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 7: A/B მონიტორი (Live Comparison)             -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:ABMonitorView x:Name="TheABMonitor"/>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 8: Live Stream Clipper                        -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:StreamClipperView x:Name="TheStreamClipper"/>
+                </TabItem>
+
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 9: სახის დაბუნდოვნება (Face blur / privacy)   -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:FaceBlurView x:Name="TheFaceBlur"/>
+                </TabItem>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- TAB 10: ხმის ჩაწერა (Voice-over)                  -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <TabItem>
+                    <local:VoiceOverView x:Name="TheVoiceOver"/>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- ══ TOAST NOTIFICATIONS — floating overlay, bottom-right ══ -->
+        <StackPanel x:Name="ToastHost" Grid.Column="0" Grid.ColumnSpan="3"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,20,20" IsHitTestVisible="False"
+                    Panel.ZIndex="999"/>
+        </Grid>
+    </Grid>
+</Window>

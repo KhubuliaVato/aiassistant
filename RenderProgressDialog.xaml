@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="AiAssistant.RenderProgressDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="1Flow AiAssistant"
+        Width="500" Height="220"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="Transparent"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False">
+
+    <Border Background="#151A1F" CornerRadius="16"
+            BorderBrush="#4DCD0F20" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="0" Opacity="0.75"/>
+        </Border.Effect>
+
+        <Grid Margin="32,26,32,26">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ── Icon + Title ────────────────────────────────── -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <TextBlock x:Name="TxtIcon" Text="⚙️"
+                           FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtTitle" Text="ვიდეო მუშავდება"
+                           Foreground="#F9F8F9" FontSize="17" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- ── Status message ──────────────────────────────── -->
+            <TextBlock Grid.Row="2" x:Name="TxtStatus"
+                       Text="ამოჭრა მიმდინარეობს... ✂️"
+                       Foreground="#99F9F8F9" FontSize="13"/>
+
+            <!-- ── Gradient progress bar ───────────────────────── -->
+            <ProgressBar Grid.Row="4" x:Name="PbMain"
+                         Height="10" Minimum="0" Maximum="100" Value="0">
+                <ProgressBar.Style>
+                    <Style TargetType="ProgressBar">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Grid>
+                                        <Border x:Name="PART_Track"
+                                                Background="#22282D" CornerRadius="5" Height="10"/>
+                                        <Border x:Name="PART_Indicator"
+                                                HorizontalAlignment="Left" CornerRadius="5" Height="10">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                    <GradientStop Color="#0A84FF" Offset="0"/>
+                                                    <GradientStop Color="#30D158" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                        </Border>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ProgressBar.Style>
+            </ProgressBar>
+
+            <!-- ── Percentage label ────────────────────────────── -->
+            <TextBlock Grid.Row="6" x:Name="TxtPercent"
+                       Text="0%" Foreground="#4DF9F8F9" FontSize="12"
+                       HorizontalAlignment="Right"/>
+        </Grid>
+    </Border>
+</Window>

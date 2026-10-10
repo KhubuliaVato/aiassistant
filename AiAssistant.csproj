@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- Sets the .exe file icon AND the default taskbar icon at compile time -->
+    <ApplicationIcon>assets\logos\logo.ico</ApplicationIcon>
+
+    <RootNamespace>AiAssistant</RootNamespace>
+    <AssemblyName>1FlowAiAssistant</AssemblyName>
+    <Product>1Flow AiAssistant</Product>
+    <AssemblyTitle>1Flow AiAssistant</AssemblyTitle>
+    <Description>AI assistant for newsroom video: vertical crop, edit, AI background, face blur, voice-over, downloads.</Description>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Company>1Flow</Company>
+    <!-- no ffmpeg / yt-dlp / AI models are shipped: the app downloads them on first run (see ToolManager) -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="tracker.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="virtual_bg.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="face_blur.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Copy assets folder to output so logo.png and logo.ico are accessible at runtime -->
+    <None Include="assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

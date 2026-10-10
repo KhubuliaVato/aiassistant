@@ -1,0 +1,306 @@
+﻿<UserControl x:Class="AiAssistant.EditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="370"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════════ LEFT PANEL: player + transport + timeline ═══════════ -->
+        <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- 0: header -->
+                    <RowDefinition Height="*" MinHeight="180"/>  <!-- 1: player -->
+                    <RowDefinition Height="Auto"/>   <!-- 2: transport + tools -->
+                    <RowDefinition Height="Auto"/>   <!-- 3: timeline -->
+                    <RowDefinition Height="Auto"/>   <!-- 4: hint -->
+                </Grid.RowDefinitions>
+
+                <!-- ── 0. HEADER ──────────────────────────────────────── -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                            BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
+                        <Path Data="{StaticResource Icon.Cut}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="მინი მონტაჟი" FontSize="21" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="ჭრა, გადალაგება და გადასვლები ერთ ტაიმლაინზე"
+                                   FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnLoadProject" Style="{StaticResource SecondaryButton}"
+                                Padding="13,9" FontSize="12.5" Margin="0,0,6,0"
+                                ToolTip="შენახული პროექტის გახსნა (.flowproj)" Click="BtnLoadProject_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="პროექტი" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnSaveProject" Style="{StaticResource SecondaryButton}"
+                                Padding="13,9" FontSize="12.5" Margin="0,0,6,0" IsEnabled="False"
+                                ToolTip="პროექტის შენახვა (ჭრები და გადასვლები)" Click="BtnSaveProject_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="შენახვა" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnAddClip" Style="{StaticResource SecondaryButton}"
+                                Padding="13,9" FontSize="12.5" Margin="0,0,6,0"
+                                ToolTip="დაამატე კლიპი ტაიმლაინის ბოლოში" Click="BtnAddClip_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,0,8,0"
+                                           Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                                <TextBlock Text="კლიპი" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BtnEditorOpenFile" Style="{StaticResource SecondaryButton}"
+                                Padding="13,9" FontSize="12.5"
+                                ToolTip="ახალი ტაიმლაინის დაწყება (არსებულს შლის)" Click="BtnEditorOpenFile_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE714;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="ვიდეოს გახსნა" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── 1. VIDEO PLAYER ────────────────────────────────── -->
+                <Border Grid.Row="1" x:Name="PlayerFrame" Background="{DynamicResource VideoBg}" CornerRadius="14"
+                        Margin="0,18,0,14"
+                        AllowDrop="True"
+                        DragEnter="VideoArea_DragEnter" DragLeave="VideoArea_DragLeave"
+                        DragOver="VideoArea_DragOver" Drop="VideoArea_Drop">
+                    <Grid>
+                        <MediaElement x:Name="EditorMediaElement" LoadedBehavior="Manual"
+                                      UnloadedBehavior="Stop" Stretch="Uniform" ScrubbingEnabled="True"
+                                      MediaOpened="EditorMedia_Opened" MediaEnded="EditorMedia_Ended"/>
+                        <StackPanel x:Name="EditorPlaceholder" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid Width="84" Height="84" HorizontalAlignment="Center">
+                                <Ellipse Fill="{DynamicResource AccentSoft}"/>
+                                <Ellipse Stroke="{DynamicResource AccentBorder}" StrokeThickness="1" Margin="9"/>
+                                <TextBlock Text="&#xE8C6;" FontFamily="Segoe MDL2 Assets" FontSize="28"
+                                           Foreground="{DynamicResource Accent}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock Text="ვიდეო არ არის გახსნილი" FontSize="17" FontWeight="SemiBold"
+                                       Foreground="#E6E8EC" Margin="0,18,0,0" HorizontalAlignment="Center"/>
+                            <TextBlock Text="გადმოათრიე ფაილი აქ — ტაიმლაინზე ჩაგდება კლიპს ამატებს"
+                                       Foreground="#8A919C" FontSize="12.5" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="ვიდეოს არჩევა"
+                                    Click="BtnEditorOpenFile_Click" HorizontalAlignment="Center"
+                                    Padding="22,11" Margin="0,20,0,0"/>
+                        </StackPanel>
+                        <!-- a gap on the timeline plays as black -->
+                        <Border x:Name="GapOverlay" Background="Black" Visibility="Collapsed" IsHitTestVisible="False"/>
+                        <!-- Transition fade overlay (animates opacity during preview) -->
+                        <Border x:Name="FadeOverlay" Background="Black" Opacity="0" IsHitTestVisible="False"/>
+                        <!-- Drag-over highlight -->
+                        <Border x:Name="DragOverlay" Background="{DynamicResource AccentSoft}"
+                                BorderBrush="{DynamicResource Accent}" BorderThickness="2" CornerRadius="14"
+                                Visibility="Collapsed" IsHitTestVisible="False">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="36"
+                                           Foreground="{DynamicResource Accent}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="გაუშვი ვიდეო აქ" Foreground="#FFFFFF" FontSize="17" FontWeight="SemiBold"
+                                           Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- ── 2. TRANSPORT + TIMECODE + TOOLS ───────────────── -->
+                <Grid Grid.Row="2" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnEditorPlay" Style="{StaticResource PrimaryButton}"
+                                Content="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                Width="46" Height="46" Padding="0" IsEnabled="False"
+                                ToolTip="დაკვრა / პაუზა (Space)" Click="BtnEditorPlay_Click"/>
+                        <Button x:Name="BtnEditorRewind" Style="{StaticResource ToolButton}"
+                                Content="&#xE892;" Height="46" Margin="8,0,0,0" IsEnabled="False"
+                                ToolTip="დასაწყისში დაბრუნება" Click="BtnEditorRewind_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock x:Name="EditorCurrentTime" Text="0:00:00" FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}" FontFamily="Consolas"/>
+                        <TextBlock Text=" / " FontSize="22" Foreground="{DynamicResource TextDisabled}" FontFamily="Consolas"/>
+                        <TextBlock x:Name="EditorTotalTime" Text="0:00:00" FontSize="22"
+                                   Foreground="{DynamicResource TextMuted}" FontFamily="Consolas"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnCutHere" Style="{StaticResource ToolButton}" Content="&#xE8C6;"
+                                IsEnabled="False" Click="BtnCutHere_Click" ToolTip="გაჭრა პლეიჰედზე (C)"/>
+                        <Button x:Name="BtnMagnet" Style="{StaticResource ToolButton}" Tag="on"
+                                Click="BtnMagnet_Click" Margin="6,0,0,0" ToolTip="მაგნიტური მიმაგრება (S)">
+                            <Path Data="M5,3 L5,12 A7,7 0 0 0 19,12 L19,3 L15,3 L15,12 A3,3 0 0 1 9,12 L9,3 Z"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  Stretch="Uniform" Width="14" Height="14"/>
+                        </Button>
+                        <Rectangle Width="1" Height="22" Fill="{DynamicResource Border}" Margin="10,0,4,0"/>
+                        <Button x:Name="BtnUndo" Style="{StaticResource ToolButton}" Content="&#xE7A7;"
+                                IsEnabled="False" Click="BtnUndo_Click" Margin="6,0,0,0" ToolTip="გაუქმება (Ctrl+Z)"/>
+                        <Button x:Name="BtnRedo" Style="{StaticResource ToolButton}" Content="&#xE7A6;"
+                                IsEnabled="False" Click="BtnRedo_Click" Margin="6,0,0,0" ToolTip="გამეორება (Ctrl+Y)"/>
+                        <Button x:Name="BtnDeleteSegment" Style="{StaticResource ToolButton}" Content="&#xE74D;"
+                                Foreground="{DynamicResource Danger}"
+                                IsEnabled="False" Click="BtnDeleteSegment_Click" Margin="6,0,0,0"
+                                ToolTip="მონიშნული კლიპის წაშლა (Del)"/>
+                        <Button x:Name="BtnResetCuts" Style="{StaticResource ToolButton}" Content="&#xE72C;"
+                                IsEnabled="False" Click="BtnResetCuts_Click" Margin="6,0,0,0"
+                                ToolTip="მთელი ტაიმლაინის გასუფთავება"/>
+                        <Rectangle Width="1" Height="22" Fill="{DynamicResource Border}" Margin="10,0,4,0"/>
+                        <Button x:Name="BtnZoomOut" Style="{StaticResource ToolButton}" Content="&#xE71F;"
+                                Margin="6,0,0,0" Click="BtnZoomOut_Click" ToolTip="დაპატარავება (Ctrl + ბორბალი)"/>
+                        <Button x:Name="BtnZoomIn" Style="{StaticResource ToolButton}" Content="&#xE8A3;"
+                                Margin="6,0,0,0" Click="BtnZoomIn_Click" ToolTip="გადიდება (Ctrl + ბორბალი)"/>
+                        <Button x:Name="BtnZoomFit" Style="{StaticResource ToolButton}" Content="Fit" FontFamily="Segoe UI"
+                                FontSize="11.5" FontWeight="SemiBold" Margin="6,0,0,0" Click="BtnZoomFit_Click"
+                                ToolTip="მთელი ტაიმლაინის ჩატევა"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── 3. TIMELINE ────────────────────────────────────── -->
+                <Border Grid.Row="3" Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}"
+                        BorderThickness="1" CornerRadius="14" ClipToBounds="True"
+                        PreviewMouseWheel="Timeline_PreviewMouseWheel"
+                        AllowDrop="True"
+                        DragEnter="TimelineArea_DragEnter" DragLeave="TimelineArea_DragLeave"
+                        DragOver="TimelineArea_DragOver" Drop="TimelineArea_Drop">
+                    <Grid>
+                        <ScrollViewer x:Name="TimelineScroller"
+                                      HorizontalScrollBarVisibility="Hidden"
+                                      VerticalScrollBarVisibility="Disabled"
+                                      Focusable="False">
+                            <Canvas x:Name="TimelineCanvas" Height="170" Background="Transparent"
+                                    MouseLeftButtonDown="Timeline_MouseLeftButtonDown"
+                                    MouseLeftButtonUp="Timeline_MouseLeftButtonUp"
+                                    MouseMove="Timeline_MouseMove"
+                                    MouseRightButtonDown="Timeline_MouseRightButtonDown"
+                                    SizeChanged="Timeline_SizeChanged">
+                                <!-- Persistent playhead (always on top) -->
+                                <Rectangle x:Name="TimelinePlayhead" Width="2" Height="170"
+                                           Fill="{DynamicResource Accent}"
+                                           Canvas.Top="0" Canvas.Left="0" Canvas.ZIndex="999"/>
+                                <Polygon x:Name="PlayheadTriangle" Points="-7,0 7,0 0,10"
+                                         Fill="{DynamicResource Accent}" Cursor="SizeWE"
+                                         Canvas.Top="0" Canvas.Left="0"
+                                         Canvas.ZIndex="1000" IsHitTestVisible="True"
+                                         MouseLeftButtonDown="PlayheadHandle_MouseDown"/>
+                            </Canvas>
+                        </ScrollViewer>
+                        <Border x:Name="TimelineDragOverlay" Background="{DynamicResource AccentSoft}"
+                                BorderBrush="{DynamicResource Accent}" BorderThickness="2" CornerRadius="14"
+                                Visibility="Collapsed" IsHitTestVisible="False">
+                            <TextBlock Text="+ კლიპის დამატება ტაიმლაინზე" Foreground="{DynamicResource TextPrimary}"
+                                       FontSize="13.5" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- ── 4. HINT ────────────────────────────────────────── -->
+                <TextBlock Grid.Row="4" Margin="2,10,0,0" FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"
+                           Text="კლიპის გადათრევა — გადაადგილება (ფენებს შორისაც)   ·   კიდეების გადათრევა — ამოჭრა   ·   მარჯვენა ღილაკი — გაჭრა   ·   Del — წაშლა   ·   Shift+Del — წაშლა ღრეჩოს დახურვით   ·   Ctrl + ბორბალი — მასშტაბი"/>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════ RIGHT PANEL: clips + export ═══════════ -->
+        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="22,22,16,20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Margin="0,0,6,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="კლიპები" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="თანმიმდევრობა ტაიმლაინზე" FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
+                            BorderThickness="1" CornerRadius="14" Padding="11,4" VerticalAlignment="Top">
+                        <TextBlock x:Name="TxtCutInfo" Text="0 კლიპი" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+                    </Border>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Padding="0,0,6,0">
+                    <Grid>
+                        <StackPanel x:Name="SegmentsStrip"/>
+                        <StackPanel x:Name="TxtNoSegments" VerticalAlignment="Top" Margin="0,40,0,0">
+                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="30"
+                                       Foreground="{DynamicResource TextDisabled}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="კლიპები ჯერ არ არის" FontSize="14" FontWeight="Medium"
+                                       Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                            <TextBlock Text="გახსენი ვიდეო ან გადმოათრიე ფაილი"
+                                       FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
+                <!-- total duration -->
+                <Border Grid.Row="2" Style="{StaticResource TileCard}" Margin="0,12,6,12" Padding="16,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="მთლიანი ხანგრძლივობა" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+                            <TextBlock x:Name="EditorClipDuration" Text="—" FontSize="11.5"
+                                       Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" x:Name="TxtTotalDur" Text="—" FontSize="24" FontWeight="SemiBold"
+                                   FontFamily="Consolas" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- export -->
+                <StackPanel Grid.Row="3" Margin="0,0,6,0">
+                    <Button x:Name="BtnEditorCutAndCrop" Style="{StaticResource GlowPrimaryButton}"
+                            Height="48" FontSize="14" IsEnabled="False" Click="BtnEditorCutAndCrop_Click"
+                            ToolTip="ტაიმლაინს ამოჭრის და პირდაპირ გავერტიკალურებაზე გადაიყვანს (Ctrl+Enter)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="ჭრა + გავერტიკალურება" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="10,1,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnEditorCutOnly" Style="{StaticResource SecondaryButton}"
+                            Height="46" FontSize="13.5" Margin="0,10,0,0" IsEnabled="False" Click="BtnEditorCutOnly_Click"
+                            ToolTip="ტაიმლაინს ვიდეო ფაილად შეინახავს">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="ამოჭრა და შენახვა" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

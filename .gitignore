@@ -1,0 +1,19 @@
+# build
+bin/
+obj/
+.vs/
+*.user
+publish/
+
+# local tooling
+.claude/
+
+# large files that the app downloads by itself on first run
+ffmpeg.exe
+ffprobe.exe
+yt-dlp.exe
+*.onnx
+*.tflite
+
+# user data / logs
+*.log
