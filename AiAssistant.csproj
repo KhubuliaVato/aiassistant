@@ -14,9 +14,9 @@
     <Product>1Flow AiAssistant</Product>
     <AssemblyTitle>1Flow AiAssistant</AssemblyTitle>
     <Description>AI assistant for newsroom video: vertical crop, edit, AI background, face blur, voice-over, downloads.</Description>
-    <Version>1.0.0</Version>
-    <FileVersion>1.0.0.0</FileVersion>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Version>1.0.1</Version>
+    <FileVersion>1.0.1.0</FileVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <Company>1Flow</Company>
     <!-- no ffmpeg / yt-dlp / AI models are shipped: the app downloads them on first run (see ToolManager) -->
   </PropertyGroup>
