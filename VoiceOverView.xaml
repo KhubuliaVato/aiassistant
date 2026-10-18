@@ -4,19 +4,36 @@
              xmlns:local="clr-namespace:AiAssistant"
              Background="Transparent" Focusable="True">
 
+    <UserControl.Resources>
+        <!-- one row: label · slider · value -->
+        <Style x:Key="FxLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        <Style x:Key="FxValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="12"/>
-            <ColumnDefinition Width="410"/>
+            <ColumnDefinition Width="440"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ═══════════ LEFT: video + timeline + record ═══════════ -->
+        <!-- ═══════════════ LEFT: the studio ═══════════════ -->
         <Border Grid.Column="0" Style="{StaticResource PanelCard}" Padding="24,22">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>   <!-- header -->
-                    <RowDefinition Height="*"/>      <!-- video -->
+                    <RowDefinition Height="*"/>      <!-- stage -->
                     <RowDefinition Height="Auto"/>   <!-- transport -->
                     <RowDefinition Height="Auto"/>   <!-- timeline -->
                     <RowDefinition Height="Auto"/>   <!-- record bar -->
@@ -31,69 +48,102 @@
                     </Grid.ColumnDefinitions>
                     <Border Width="46" Height="46" CornerRadius="13" Background="{DynamicResource AccentSoft}"
                             BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Margin="0,0,14,0">
-                        <Path Data="{StaticResource Icon.Mic}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Path Data="{StaticResource Icon.Mic}" Fill="{DynamicResource Accent}" Stretch="Uniform" Width="23" Height="23"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="ხმის ჩაწერა" FontSize="21" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimary}"/>
-                        <TextBlock Text="უყურე ვიდეოს და წაიკითხე ტექსტი მიკროფონში — ხმა ზუსტად დროზე დაჯდება, ორიგინალი კი დაიწევს"
+                        <TextBlock Text="ხმის ჩაწერა" FontSize="21" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="უყურე ვიდეოს, წაიკითხე ტექსტი და ჩაწერე — ხმა ზუსტად დროზე დაჯდება, დამუშავებას კი ერთი კლიკით გაუკეთებ"
                                    FontSize="12.5" Foreground="{DynamicResource TextMuted}" Margin="0,3,0,0"/>
                     </StackPanel>
-                    <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
-                            BorderThickness="1" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+                    <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}" BorderThickness="1"
+                            CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="DotRec" Width="8" Height="8" Fill="{DynamicResource TextMuted}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock x:Name="TxtRecChip" Text="მზადაა" FontSize="12"
-                                       Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                            <Ellipse x:Name="DotRec" Width="8" Height="8" Fill="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="TxtRecChip" Text="მზადაა" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </Grid>
 
-                <!-- video -->
-                <Border Grid.Row="1" x:Name="VideoBox" Margin="0,18,0,0" CornerRadius="16" ClipToBounds="True"
-                        Background="{DynamicResource VideoBg}" MinHeight="180" AllowDrop="True"
+                <!-- stage -->
+                <Border Grid.Row="1" x:Name="VideoBox" Margin="0,16,0,0" CornerRadius="16" ClipToBounds="True"
+                        Background="{DynamicResource VideoBg}" MinHeight="200" AllowDrop="True"
                         DragEnter="Drag_Enter" DragOver="Drag_Enter" DragLeave="Drag_Leave" Drop="Drag_Drop">
                     <Grid>
-                        <MediaElement x:Name="Media" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="Uniform"
-                                      ScrubbingEnabled="True" MediaOpened="Media_Opened" MediaEnded="Media_Ended"
-                                      MediaFailed="Media_Failed"/>
+                        <MediaElement x:Name="Media" LoadedBehavior="Manual" UnloadedBehavior="Manual" Stretch="Uniform" ScrubbingEnabled="True"
+                                      MediaOpened="Media_Opened" MediaEnded="Media_Ended" MediaFailed="Media_Failed"/>
 
                         <StackPanel x:Name="DropZone" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Grid Width="84" Height="84" HorizontalAlignment="Center">
                                 <Ellipse Fill="{DynamicResource AccentSoft}"/>
                                 <Ellipse Stroke="{DynamicResource AccentBorder}" StrokeThickness="1" Margin="9"/>
-                                <TextBlock Text="&#xE720;" FontFamily="Segoe MDL2 Assets" FontSize="28"
-                                           Foreground="{DynamicResource Accent}"
+                                <TextBlock Text="&#xE720;" FontFamily="Segoe MDL2 Assets" FontSize="28" Foreground="{DynamicResource Accent}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
-                            <TextBlock Text="გადმოათრიე ვიდეო აქ" FontSize="17" FontWeight="SemiBold" Foreground="#E6E8EC"
-                                       Margin="0,18,0,0" HorizontalAlignment="Center"/>
-                            <TextBlock Text="მერე ჩაწერე ხმა ისე, თითქოს პირდაპირ ეთერში კითხულობ"
-                                       FontSize="12.5" Foreground="#8A919C" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                            <Button Style="{StaticResource SecondaryButton}" Content="ვიდეოს არჩევა" Padding="22,11"
-                                    Margin="0,20,0,0" HorizontalAlignment="Center" Click="BtnPick_Click"/>
+                            <TextBlock Text="გადმოათრიე ვიდეო აქ" FontSize="17" FontWeight="SemiBold" Foreground="#E6E8EC" Margin="0,18,0,0" HorizontalAlignment="Center"/>
+                            <TextBlock Text="მერე ჩაწერე ხმა ისე, თითქოს პირდაპირ ეთერში კითხულობ" FontSize="12.5" Foreground="#8A919C" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="ვიდეოს არჩევა" Padding="22,11" Margin="0,20,0,0"
+                                    HorizontalAlignment="Center" Click="BtnPick_Click"/>
                         </StackPanel>
+
+                        <!-- teleprompter: the text rolls over the video while you record -->
+                        <Border x:Name="PrompterBox" Visibility="Collapsed" VerticalAlignment="Bottom" Height="190" IsHitTestVisible="True">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#00000000" Offset="0"/>
+                                    <GradientStop Color="#D0000000" Offset="0.28"/>
+                                    <GradientStop Color="#EE000000" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid>
+                                <ScrollViewer x:Name="PrompterScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
+                                              Margin="40,26,40,10">
+                                    <TextBlock x:Name="PrompterText" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"
+                                               Foreground="White" LineHeight="40" Margin="0,0,0,120"/>
+                                </ScrollViewer>
+                                <Border Height="2" VerticalAlignment="Top" Margin="26,66,26,0" Background="{DynamicResource Accent}" Opacity="0.55" IsHitTestVisible="False"/>
+                            </Grid>
+                        </Border>
 
                         <!-- countdown / recording overlays -->
                         <Border x:Name="CountdownBox" Visibility="Collapsed" IsHitTestVisible="False" Background="#99000000">
-                            <TextBlock x:Name="TxtCountdown" Text="3" FontSize="120" FontWeight="Bold" Foreground="White"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Ellipse Width="190" Height="190" Stroke="#44FFFFFF" StrokeThickness="4"/>
+                                <TextBlock x:Name="TxtCountdown" Text="3" FontSize="104" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform><ScaleTransform x:Name="CountScale"/></TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Grid>
                         </Border>
-                        <Border x:Name="RecBadge" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top"
-                                Margin="14,14,0,0" Background="#E5202E" CornerRadius="9" Padding="11,5" IsHitTestVisible="False">
+                        <Border x:Name="RecFrame" Visibility="Collapsed" IsHitTestVisible="False" BorderBrush="#E5202E" BorderThickness="4" CornerRadius="16"/>
+                        <Border x:Name="RecBadge" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,16,0,0"
+                                Background="#E5202E" CornerRadius="10" Padding="12,6" IsHitTestVisible="False">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="8" Height="8" Fill="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtRecTime" Text="REC 0:00" Foreground="White" FontSize="12" FontWeight="Bold"
-                                           FontFamily="Consolas"/>
+                                <Ellipse x:Name="RecBlink" Width="9" Height="9" Fill="White" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtRecTime" Text="REC 0:00" Foreground="White" FontSize="12.5" FontWeight="Bold" FontFamily="Consolas"/>
                             </StackPanel>
                         </Border>
-                        <Button x:Name="BtnChange" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0"
-                                Style="{StaticResource SecondaryButton}" Content="ვიდეოს შეცვლა" Padding="12,7" FontSize="12"
-                                Visibility="Collapsed" Click="BtnPick_Click"/>
-                        <Border x:Name="DragOverlay" Visibility="Collapsed" IsHitTestVisible="False"
-                                Background="{DynamicResource AccentSoft}" BorderBrush="{DynamicResource Accent}"
-                                BorderThickness="2" CornerRadius="16"/>
+                        <Button x:Name="BtnStopRec" Visibility="Collapsed" Style="{StaticResource GlowPrimaryButton}" HorizontalAlignment="Center" VerticalAlignment="Top"
+                                Margin="0,16,0,0" Padding="22,10" Click="BtnRecord_Click" ToolTip="ჩაწერის გაჩერება (Space ან Esc)">
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="13" Height="13" Fill="White" RadiusX="2" RadiusY="2" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="გაჩერება" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="Space / Esc" FontSize="11" Opacity="0.7" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Border x:Name="PreRollBadge" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,16,0,0"
+                                Background="#E6F0A020" CornerRadius="10" Padding="12,6" IsHitTestVisible="False">
+                            <TextBlock x:Name="TxtPreRoll" Text="მზად იყავი…" Foreground="Black" FontSize="12.5" FontWeight="Bold"/>
+                        </Border>
+
+                        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0" Orientation="Horizontal">
+                            <Button x:Name="TglPrompter" Style="{StaticResource SecondaryButton}" Content="ტექსტი" FontSize="12" Padding="12,7" Margin="0,0,8,0"
+                                          ToolTip="პრომპტერი: ტექსტის ჩვენება / დამალვა ვიდეოზე" Click="TglPrompter_Click"/>
+                            <Button x:Name="BtnChange" Style="{StaticResource SecondaryButton}" Content="ვიდეოს შეცვლა" Padding="12,7" FontSize="12"
+                                    Visibility="Collapsed" Click="BtnPick_Click"/>
+                        </StackPanel>
+                        <Border x:Name="DragOverlay" Visibility="Collapsed" IsHitTestVisible="False" Background="{DynamicResource AccentSoft}"
+                                BorderBrush="{DynamicResource Accent}" BorderThickness="2" CornerRadius="16"/>
                     </Grid>
                 </Border>
 
@@ -101,30 +151,53 @@
                 <Grid Grid.Row="2" Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="BtnPlay" Style="{StaticResource ToolButton}" Content="&#xE768;" Width="40" Height="40"
-                            IsEnabled="False" ToolTip="ნახვა ახალი ხმით (Space)" Click="BtnPlay_Click"/>
-                    <Button Grid.Column="1" x:Name="BtnRewind" Style="{StaticResource ToolButton}" Content="&#xE892;" Width="40" Height="40"
-                            Margin="6,0,0,0" IsEnabled="False" ToolTip="დასაწყისში" Click="BtnRewind_Click"/>
-                    <Slider Grid.Column="2" x:Name="SlPos" Minimum="0" Maximum="1" IsMoveToPointEnabled="True"
-                            IsEnabled="False" Margin="14,0" ValueChanged="SlPos_Changed" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="3" x:Name="TxtPos" Text="0:00.0 / 0:00" FontFamily="Consolas" FontSize="12.5"
-                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnPlay" Style="{StaticResource ToolButton}" Content="&#xE768;" Width="40" Height="40" IsEnabled="False"
+                                ToolTip="ნახვა ახალი ხმით (Space)" Click="BtnPlay_Click"/>
+                        <Button x:Name="BtnRewind" Style="{StaticResource ToolButton}" Content="&#xE892;" Width="40" Height="40" Margin="6,0,0,0" IsEnabled="False"
+                                ToolTip="დასაწყისში (Home)" Click="BtnRewind_Click"/>
+                        <Button x:Name="BtnBack5" Style="{StaticResource ToolButton}" Content="−5" FontFamily="Segoe UI" FontSize="12" Width="40" Height="40" Margin="6,0,0,0"
+                                IsEnabled="False" ToolTip="5 წამით უკან (←)" Click="BtnSkip_Click" Tag="-5"/>
+                        <Button x:Name="BtnFwd5" Style="{StaticResource ToolButton}" Content="+5" FontFamily="Segoe UI" FontSize="12" Width="40" Height="40" Margin="6,0,0,0"
+                                IsEnabled="False" ToolTip="5 წამით წინ (→)" Click="BtnSkip_Click" Tag="5"/>
+                    </StackPanel>
+                    <Slider Grid.Column="1" x:Name="SlPos" Minimum="0" Maximum="1" IsMoveToPointEnabled="True" IsEnabled="False" Margin="14,0"
+                            ValueChanged="SlPos_Changed" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" x:Name="TxtPos" Text="0:00.0 / 0:00" FontFamily="Consolas" FontSize="12.5"
+                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                    <Border Grid.Column="3" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="3">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="ListenOrig" GroupName="VoListen" Style="{StaticResource SpeedSegment}" Content="ორიგინალი" Padding="10,7" FontSize="12" Margin="0"
+                                         Click="Listen_Changed" ToolTip="მოუსმინე მხოლოდ ვიდეოს საკუთარ ხმას"/>
+                            <RadioButton x:Name="ListenRaw" GroupName="VoListen" IsChecked="True" Style="{StaticResource SpeedSegment}" Content="ჩემი ხმა" Padding="10,7" FontSize="12" Margin="0"
+                                         Click="Listen_Changed" ToolTip="ორიგინალი + შენი ჩანაწერები დამუშავების გარეშე"/>
+                            <RadioButton x:Name="ListenFx" GroupName="VoListen" Style="{StaticResource SpeedSegment}" Content="დამუშავებული" Padding="10,7" FontSize="12" Margin="0"
+                                         Click="Listen_Changed" ToolTip="ორიგინალი + შენი ჩანაწერები დამუშავებით (ეფექტები მარჯვნივ)"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
-                <!-- timeline -->
-                <Border Grid.Row="3" Margin="0,12,0,0" CornerRadius="14" Padding="0"
-                        Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}" BorderThickness="1">
-                    <Grid Height="104">
-                        <Canvas x:Name="Timeline" ClipToBounds="True" Background="Transparent"
-                                SizeChanged="Timeline_SizeChanged" MouseLeftButtonDown="Timeline_MouseDown"
-                                MouseMove="Timeline_MouseMove" MouseLeftButtonUp="Timeline_MouseUp"/>
-                        <TextBlock x:Name="TxtTimelineHint" Text="აქ გამოჩნდება შენი ჩანაწერები — გადაათრიე დროში გადასატანად"
-                                   FontSize="12" Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,22,0,0"/>
+                <!-- timeline: ruler · original track · my voice -->
+                <Border Grid.Row="3" Margin="0,12,0,0" CornerRadius="14" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Top" Margin="0,26,0,0">
+                            <TextBlock Text="ვიდეოს ხმა" FontSize="10.5" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Right" Margin="0,11,10,0"/>
+                            <TextBlock Text="შენი ხმა" FontSize="10.5" Foreground="{DynamicResource Accent}" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,38,10,0"/>
+                        </StackPanel>
+                        <Grid Grid.Column="1" Height="152">
+                            <Canvas x:Name="Timeline" ClipToBounds="True" Background="Transparent" SizeChanged="Timeline_SizeChanged"
+                                    MouseLeftButtonDown="Timeline_MouseDown" MouseMove="Timeline_MouseMove" MouseLeftButtonUp="Timeline_MouseUp" MouseRightButtonUp="Timeline_RightUp"/>
+                            <TextBlock x:Name="TxtTimelineHint" Text="აქ გამოჩნდება შენი ჩანაწერები · I / O — მონიშნე მონაკვეთი, რომლის გადაწერაც გინდა"
+                                       FontSize="12" Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,50,0,0"/>
+                        </Grid>
                     </Grid>
                 </Border>
 
@@ -133,159 +206,347 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="250"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="BtnRecord" Style="{StaticResource GlowPrimaryButton}" Height="58" IsEnabled="False"
-                            Click="BtnRecord_Click">
+                    <Button x:Name="BtnRecord" Style="{StaticResource GlowPrimaryButton}" Height="58" IsEnabled="False" Click="BtnRecord_Click">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="RecIcon" Width="16" Height="16" Fill="White" Margin="0,0,12,0"
-                                     VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TxtRecBtn" Text="ჩაწერის დაწყება (ამ ადგილიდან)" FontSize="16"
-                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <Border Background="#33FFFFFF" CornerRadius="6" Padding="7,2" Margin="14,0,0,0"
-                                    VerticalAlignment="Center">
+                            <Ellipse x:Name="RecIcon" Width="16" Height="16" Fill="White" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtRecBtn" Text="ჩაწერის დაწყება" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Border Background="#33FFFFFF" CornerRadius="6" Padding="7,2" Margin="14,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="R" FontSize="11.5" FontWeight="Bold" FontFamily="Consolas"/>
                             </Border>
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Height="58" Padding="18,0"
-                            ToolTip="უკვე ჩაწერილი აუდიო ფაილის (WAV/MP3) დამატება ვიდეოს ამ ადგილას"
-                            Click="BtnAddAudio_Click">
+                    <!-- level meter with peak hold -->
+                    <Border Grid.Column="2" Height="58" CornerRadius="14" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="14,0">
+                        <Grid VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <TextBlock Text="დონე" FontSize="10.5" Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock x:Name="TxtDb" Text="−∞ dB" FontSize="10.5" FontFamily="Consolas" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Grid.Row="1" x:Name="MeterHost" Margin="0,6,0,0" Height="12" SizeChanged="Meter_SizeChanged">
+                                <Border CornerRadius="6" Background="{DynamicResource BgInput}"/>
+                                <Border x:Name="MeterClip" CornerRadius="6" ClipToBounds="True" HorizontalAlignment="Left" Width="0">
+                                    <Border x:Name="MeterFill" CornerRadius="6" HorizontalAlignment="Left" Width="200">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#2FD27F" Offset="0"/>
+                                                <GradientStop Color="#2FD27F" Offset="0.55"/>
+                                                <GradientStop Color="#FFB020" Offset="0.78"/>
+                                                <GradientStop Color="#F43F5E" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                </Border>
+                                <Rectangle x:Name="MeterPeak" Width="3" Height="12" Fill="White" HorizontalAlignment="Left" RadiusX="1.5" RadiusY="1.5" Opacity="0.9"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <Button Grid.Column="4" Style="{StaticResource SecondaryButton}" Height="58" Padding="16,0"
+                            ToolTip="უკვე ჩაწერილი აუდიო ფაილის (WAV/MP3) დამატება ვიდეოს ამ ადგილას" Click="BtnAddAudio_Click">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,9,0"
-                                       VerticalAlignment="Center"/>
-                            <TextBlock Text="აუდიო ფაილიდან" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="ფაილიდან" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </Grid>
             </Grid>
         </Border>
 
-        <!-- ═══════════ RIGHT: mic, takes, mix, export ═══════════ -->
-        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="20,20,14,18">
+        <!-- ═══════════════ RIGHT: the recipe ═══════════════ -->
+        <Border Grid.Column="2" Style="{StaticResource PanelCard}" Padding="20,20,12,18">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,0,6,0">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                    <StackPanel>
 
-                        <!-- microphone -->
-                        <TextBlock Text="მიკროფონი" Style="{StaticResource SectionLabel}"/>
+                        <!-- 1 · microphone -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="1" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="მიკროფონი" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </Grid>
                         <Border Style="{StaticResource TileCard}">
                             <StackPanel>
-                                <ComboBox x:Name="CmbMic" Height="44" FontSize="13" VerticalContentAlignment="Center"
-                                          SelectionChanged="CmbMic_Changed"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="CmbMic" Height="44" FontSize="13" VerticalContentAlignment="Center" SelectionChanged="CmbMic_Changed"/>
+                                    <Button Grid.Column="1" Style="{StaticResource ToolButton}" Content="&#xE72C;" Width="44" Height="44" Margin="8,0,0,0"
+                                            ToolTip="მიკროფონების თავიდან ძებნა" Click="BtnRescanMics_Click"/>
+                                </Grid>
                                 <Grid Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="104"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="52"/>
                                     </Grid.ColumnDefinitions>
-                                    <ProgressBar x:Name="PbLevel" Height="8" Minimum="0" Maximum="100" Value="0"
-                                                 VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" x:Name="BtnMicTest" Style="{StaticResource SecondaryButton}"
-                                            Content="შემოწმება" Padding="12,6" FontSize="12" Margin="12,0,0,0"
-                                            Click="BtnMicTest_Click"/>
+                                    <TextBlock Text="მიკროფონის სიძლიერე" Style="{StaticResource FxLabel}"/>
+                                    <Slider Grid.Column="1" x:Name="SlGain" Minimum="25" Maximum="400" Value="100" ValueChanged="Rec_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtGain" Text="100%" Style="{StaticResource FxValue}"/>
                                 </Grid>
-                                <TextBlock x:Name="TxtMicStatus" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
-                                           TextWrapping="Wrap" Margin="0,9,0,0"
+                                <UniformGrid Columns="2" Margin="0,12,0,0">
+                                    <Button x:Name="BtnMicTest" Style="{StaticResource SecondaryButton}" Content="დონის შემოწმება" Padding="12,8" FontSize="12.5"
+                                            Margin="0,0,4,0" ToolTip="თქვი რამე — ქვემოთ ზოლი უნდა მოძრაობდეს" Click="BtnMicTest_Click"/>
+                                    <Button x:Name="BtnRoom" Style="{StaticResource SecondaryButton}" Content="ოთახის ტესტი" Padding="12,8" FontSize="12.5"
+                                            Margin="4,0,0,0" ToolTip="5 წამი: ჯერ სიჩუმე, მერე საუბარი — ვიტყვი ხმაურია თუ არა და თავად დავაყენებ სიძლიერეს" Click="BtnRoom_Click"/>
+                                </UniformGrid>
+                                <TextBlock x:Name="TxtMicStatus" FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,10,0,0"
                                            Text="ჩაწერისას ყურსასმენი გამოიყენე, რომ ვიდეოს ხმა მიკროფონში არ მოხვდეს."/>
                             </StackPanel>
                         </Border>
 
-                        <!-- recording options -->
-                        <TextBlock Text="ჩაწერის პარამეტრები" Style="{StaticResource SectionLabel}" Margin="2,12,0,10"/>
+                        <!-- 2 · script -->
+                        <Grid Margin="0,22,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="2" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ტექსტი (პრომპტერი)" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="არასავალდებულო — ტექსტი ვიდეოზე გაგირბის ჩაწერისას" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
                         <Border Style="{StaticResource TileCard}">
                             <StackPanel>
-                                <CheckBox x:Name="ChkCountdown" Style="{StaticResource ToggleSwitch}" IsChecked="True">
-                                    <StackPanel>
-                                        <TextBlock Text="3-2-1 დათვლა" FontSize="13.5" FontWeight="Medium"
-                                                   Foreground="{DynamicResource TextPrimary}"/>
-                                        <TextBlock Text="ჩაწერის წინ, მოსამზადებლად" FontSize="11.5"
-                                                   Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                </CheckBox>
-                                <Grid Margin="0,14,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="112"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="46"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="ვიდეოს ხმა ჩაწერისას" FontSize="12.5" TextWrapping="Wrap"
-                                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
-                                    <Slider Grid.Column="1" x:Name="SlMonitor" Minimum="0" Maximum="100" Value="25"
-                                            ValueChanged="SlMonitor_Changed" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" x:Name="TxtMonitor" Text="25%" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"/>
-                                </Grid>
+                                <TextBox x:Name="TxtScript" Height="130" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontSize="13"
+                                         Padding="10,8" VerticalContentAlignment="Top" TextChanged="Script_Changed"
+                                         ToolTip="ჩასვი ან ჩაწერე ტექსტი, რომელსაც წაიკითხავ"/>
+                                <TextBlock Text="ჩასვი ტექსტი აქ — ჩაწერისას ის ვიდეოს ქვემოთ ნელ-ნელა ამოძრავდება, სიტყვები კი გამუქდება, როცა წაიკითხავ."
+                                           FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                 <Grid Margin="0,12,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="112"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="60"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="მიკროფონის დაყოვნება" FontSize="12.5" TextWrapping="Wrap"
-                                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"
-                                               ToolTip="თუ ჩანაწერი ვიდეოზე გვიან ჯდება, გაზარდე"/>
-                                    <Slider Grid.Column="1" x:Name="SlLatency" Minimum="0" Maximum="400" Value="80"
-                                            TickFrequency="10" IsSnapToTickEnabled="True"
-                                            ValueChanged="SlLatency_Changed" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" x:Name="TxtLatency" Text="80 მს" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"/>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="104"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="სიჩქარე" Style="{StaticResource FxLabel}"/>
+                                    <Slider Grid.Column="1" x:Name="SlWpm" Minimum="60" Maximum="260" Value="130" ValueChanged="Rec_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtWpm" Text="130" Style="{StaticResource FxValue}" ToolTip="სიტყვა წუთში"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="104"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="შრიფტი" Style="{StaticResource FxLabel}"/>
+                                    <Slider Grid.Column="1" x:Name="SlFont" Minimum="18" Maximum="48" Value="28" ValueChanged="Rec_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtFont" Text="28" Style="{StaticResource FxValue}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
-                        <!-- takes -->
-                        <Grid Margin="2,16,0,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="ჩანაწერები" Style="{StaticResource SectionLabel}" Margin="0"
-                                       VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TxtTakeCount" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
-                                       Grid.Column="1" VerticalAlignment="Center"/>
+                        <!-- 3 · recording -->
+                        <Grid Margin="0,22,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="3" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ჩაწერა" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="დათვლა, წინასწარი ჩვენება და გადაწერის მონაკვეთი" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                            </StackPanel>
                         </Grid>
-                        <TextBlock x:Name="TxtNoTakes" FontSize="12.5" Foreground="{DynamicResource TextMuted}"
-                                   TextWrapping="Wrap" Margin="2,0,0,8"
+                        <Border Style="{StaticResource TileCard}">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkCountdown" Style="{StaticResource ToggleSwitch}" IsChecked="True">
+                                    <StackPanel>
+                                        <TextBlock Text="3-2-1 დათვლა" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="ჩაწერის წინ, მოსამზადებლად" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </CheckBox>
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="104"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="წინასწარი ჩვენება" Style="{StaticResource FxLabel}"
+                                               ToolTip="ვიდეო ამდენი წამით ადრე დაიწყება, რომ სპიკერის რიტმი დაიჭირო — ჩაწერა დათვლილ ადგილას ჩაირთვება"/>
+                                    <Border Grid.Column="1" Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="3" HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal">
+                                            <RadioButton x:Name="Pre0" GroupName="VoPre" Style="{StaticResource SpeedSegment}" Content="0" Padding="12,6" Margin="0" Click="Rec_Changed"/>
+                                            <RadioButton x:Name="Pre2" GroupName="VoPre" IsChecked="True" Style="{StaticResource SpeedSegment}" Content="2 წმ" Padding="10,6" Margin="0" Click="Rec_Changed"/>
+                                            <RadioButton x:Name="Pre3" GroupName="VoPre" Style="{StaticResource SpeedSegment}" Content="3 წმ" Padding="10,6" Margin="0" Click="Rec_Changed"/>
+                                            <RadioButton x:Name="Pre5" GroupName="VoPre" Style="{StaticResource SpeedSegment}" Content="5 წმ" Padding="10,6" Margin="0" Click="Rec_Changed"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                                <CheckBox x:Name="ChkMonitor" Style="{StaticResource ToggleSwitch}" IsChecked="False" Margin="0,14,0,0" Click="Monitor_Changed">
+                                    <StackPanel>
+                                        <TextBlock Text="ვიდეოს ხმა ჩაწერისას" FontSize="13.5" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
+                                        <TextBlock Text="გამორთულია — ვიდეოს უხმოდ უყურებ და მხოლოდ შენი ხმა იწერება" FontSize="11.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </CheckBox>
+                                <Grid x:Name="MonitorRow" Margin="0,10,0,0" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="104"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="სიმაღლე" Style="{StaticResource FxLabel}" ToolTip="ყურსასმენით გამოიყენე, რომ მიკროფონში არ მოხვდეს"/>
+                                    <Slider Grid.Column="1" x:Name="SlMonitor" Minimum="0" Maximum="100" Value="25" ValueChanged="Rec_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtMonitor" Text="25%" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="104"/><ColumnDefinition Width="*"/><ColumnDefinition Width="52"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="მიკროფონის დაყოვნება" Style="{StaticResource FxLabel}" ToolTip="თუ ჩანაწერი ვიდეოზე გვიან ჯდება, გაზარდე"/>
+                                    <Slider Grid.Column="1" x:Name="SlLatency" Minimum="0" Maximum="400" Value="80" TickFrequency="10" IsSnapToTickEnabled="True"
+                                            ValueChanged="Rec_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtLatency" Text="80 მს" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Border Margin="0,14,0,0" CornerRadius="10" Background="{DynamicResource BgInput}" Padding="12,10">
+                                    <StackPanel>
+                                        <Grid>
+                                            <TextBlock x:Name="TxtPunch" Text="გადაწერის მონაკვეთი: არ არის მონიშნული" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <Button Style="{StaticResource GhostButton}" Content="I" FontFamily="Consolas" FontWeight="Bold" Padding="9,4" ToolTip="დასაწყისი აქ (I)" Click="BtnSetIn_Click"/>
+                                                <Button Style="{StaticResource GhostButton}" Content="O" FontFamily="Consolas" FontWeight="Bold" Padding="9,4" Margin="3,0,0,0" ToolTip="დასასრული აქ (O)" Click="BtnSetOut_Click"/>
+                                                <Button Style="{StaticResource GhostButton}" Content="&#xE711;" FontFamily="Segoe MDL2 Assets" Padding="9,6" Margin="3,0,0,0" ToolTip="მონაკვეთის გასუფთავება" Click="BtnClearPunch_Click"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="მონიშნე I / O და ჩაწერა მხოლოდ ამ მონაკვეთში ჩაირთვება და თავისით გაჩერდება — ძველი ჩანაწერი ამ ადგილას ჩანაცვლდება."
+                                                   FontSize="11" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 4 · takes -->
+                        <Grid Margin="0,22,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="4" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="ჩანაწერები" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button x:Name="BtnSplit" Style="{StaticResource GhostButton}" Padding="10,6" FontSize="12" Content="გაჭრა (S)" ToolTip="ჩანაწერის გაჭრა მოძრავი ხაზის ადგილას" Click="BtnSplit_Click"/>
+                                <Button x:Name="BtnUndo" Style="{StaticResource GhostButton}" Padding="10,6" FontSize="12" Content="&#xE7A7;" FontFamily="Segoe MDL2 Assets" Margin="3,0,0,0" ToolTip="გაუქმება (Ctrl+Z)" Click="BtnUndo_Click"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock x:Name="TxtNoTakes" FontSize="12.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,0,0,8"
                                    Text="ჯერ არაფერია ჩაწერილი. დააჭირე წითელ ღილაკს (ან R) და დაიწყე კითხვა."/>
                         <StackPanel x:Name="TakesPanel"/>
 
-                        <!-- mix -->
-                        <TextBlock Text="შერევა" Style="{StaticResource SectionLabel}" Margin="2,16,0,10"/>
+                        <!-- 5 · processing -->
+                        <Grid Margin="0,22,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="5" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ხმის დამუშავება" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="არასავალდებულო — ხმას სტუდიურად აჟღერებს" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                        <UniformGrid Columns="3">
+                            <RadioButton x:Name="FxOff" GroupName="VoFx" IsChecked="True" Style="{StaticResource ModeCard}" Margin="0,0,5,8" Click="FxPreset_Click" Tag="off">
+                                <StackPanel><TextBlock Text="როგორც არის" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="დამუშავების გარეშე" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="FxNatural" GroupName="VoFx" Style="{StaticResource ModeCard}" Margin="3,0,3,8" Click="FxPreset_Click" Tag="natural">
+                                <StackPanel><TextBlock Text="ბუნებრივი" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="მსუბუქი გასუფთავება" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="FxStudio" GroupName="VoFx" Style="{StaticResource ModeCard}" Margin="5,0,0,8" Click="FxPreset_Click" Tag="studio">
+                                <StackPanel><TextBlock Text="სტუდიური" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="სუფთა და მკაფიო" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="FxTv" GroupName="VoFx" Style="{StaticResource ModeCard}" Margin="0,0,5,0" Click="FxPreset_Click" Tag="tv">
+                                <StackPanel><TextBlock Text="ტელევიზია" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="ეთერის სტანდარტი" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="FxRadio" GroupName="VoFx" Style="{StaticResource ModeCard}" Margin="3,0,3,0" Click="FxPreset_Click" Tag="radio">
+                                <StackPanel><TextBlock Text="რადიო" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="მკვრივი და თბილი" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="FxCustom" GroupName="VoFx" Style="{StaticResource ModeCard}" Margin="5,0,0,0" Click="FxPreset_Click" Tag="custom">
+                                <StackPanel><TextBlock Text="ჩემი" FontSize="12.5" FontWeight="SemiBold"/><TextBlock Text="თავად გაასწორე" FontSize="10.5" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" TextWrapping="Wrap"/></StackPanel>
+                            </RadioButton>
+                        </UniformGrid>
+
+                        <Border x:Name="FxPanel" Style="{StaticResource TileCard}" Margin="0,12,0,0" Visibility="Collapsed">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="ხმაურის შემცირება" Style="{StaticResource FxLabel}" ToolTip="ვენტილატორი, მაცივარი, ოთახის ხმაური"/>
+                                    <Slider Grid.Column="1" x:Name="SlNr" Minimum="0" Maximum="100" Value="10" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtNr" Text="10" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="ღრიალის ჩახშობა" Style="{StaticResource FxLabel}" ToolTip="დაბალი გუგუნი, მაგიდის დარტყმები (Low-cut)"/>
+                                    <Slider Grid.Column="1" x:Name="SlHp" Minimum="0" Maximum="200" Value="80" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtHp" Text="80 Hz" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="სითბო" Style="{StaticResource FxLabel}" ToolTip="უფრო სავსე, ღრმა ხმა"/>
+                                    <Slider Grid.Column="1" x:Name="SlWarm" Minimum="-6" Maximum="8" Value="1" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtWarm" Text="+1 dB" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="სიცხადე" Style="{StaticResource FxLabel}" ToolTip="სიტყვები უფრო გასაგები ხდება"/>
+                                    <Slider Grid.Column="1" x:Name="SlPres" Minimum="-6" Maximum="8" Value="2" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtPres" Text="+2 dB" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="„ს“-ს შერბილება" Style="{StaticResource FxLabel}" ToolTip="სისინა ბგერებს ამშვიდებს (De-esser)"/>
+                                    <Slider Grid.Column="1" x:Name="SlDeess" Minimum="0" Maximum="100" Value="30" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtDeess" Text="30" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="თანაბარი ხმა" Style="{StaticResource FxLabel}" ToolTip="ჩუმ და ხმამაღალ ადგილებს შორის სხვაობას ამცირებს (კომპრესია)"/>
+                                    <Slider Grid.Column="1" x:Name="SlComp" Minimum="0" Maximum="100" Value="40" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtComp" Text="40" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="პაუზების გაწმენდა" Style="{StaticResource FxLabel}" ToolTip="სიტყვებს შორის ხმაურს ჩუმდება (Gate)"/>
+                                    <Slider Grid.Column="1" x:Name="SlGate" Minimum="0" Maximum="100" Value="0" ValueChanged="Fx_Slider_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtGate" Text="0" Style="{StaticResource FxValue}"/>
+                                </Grid>
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="სიმაღლე (LUFS)" Style="{StaticResource FxLabel}" ToolTip="ხმის საბოლოო სიმაღლეს აწესებს"/>
+                                    <ComboBox Grid.Column="1" x:Name="CmbLoud" Height="36" SelectedIndex="1" SelectionChanged="Fx_Combo_Changed">
+                                        <ComboBoxItem Content="არ შეცვალო" Tag="0"/>
+                                        <ComboBoxItem Content="−16 LUFS · ინტერნეტი" Tag="-16"/>
+                                        <ComboBoxItem Content="−23 LUFS · ტელევიზია (EBU R128)" Tag="-23"/>
+                                        <ComboBoxItem Content="−14 LUFS · YouTube / Spotify" Tag="-14"/>
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource TileCard}" Margin="0,10,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtFxInfo" FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"
+                                           Text="აირჩიე დამუშავება და ზემოთ დააჭირე „დამუშავებული“ — გაიგონებ განსხვავებას."/>
+                                <Button x:Name="BtnFxPreview" Style="{StaticResource SecondaryButton}" Content="მოუსმინე დამუშავებულს" Height="40" Margin="0,10,0,0"
+                                        IsEnabled="False" Click="BtnFxPreview_Click"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 6 · mix -->
+                        <Grid Margin="0,22,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource Accent}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="6" FontWeight="Bold" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="შერევა" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="რა ბედი ეწევა ვიდეოს საკუთარ ხმას" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
                         <Border Style="{StaticResource TileCard}">
                             <StackPanel>
-                                <Border Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}"
-                                        BorderThickness="1" CornerRadius="12" Padding="3" HorizontalAlignment="Left">
+                                <Border Background="{DynamicResource BgInput}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="3" HorizontalAlignment="Left">
                                     <StackPanel Orientation="Horizontal">
-                                        <RadioButton x:Name="RbDuckFixed" GroupName="VoDuck" IsChecked="True"
-                                                     Style="{StaticResource SpeedSegment}" Content="ფიქსირებული" Padding="14,7"
-                                                     Margin="0" Click="Mix_Changed"/>
-                                        <RadioButton x:Name="RbDuckAuto" GroupName="VoDuck" Style="{StaticResource SpeedSegment}"
-                                                     Content="ავტო (საუბრისას)" Padding="14,7" Margin="0" Click="Mix_Changed"/>
+                                        <RadioButton x:Name="RbDuckFixed" GroupName="VoDuck" IsChecked="True" Style="{StaticResource SpeedSegment}" Content="ფიქსირებული" Padding="14,7" Margin="0" Click="Mix_Changed"/>
+                                        <RadioButton x:Name="RbDuckAuto" GroupName="VoDuck" Style="{StaticResource SpeedSegment}" Content="ავტო (საუბრისას)" Padding="14,7" Margin="0" Click="Mix_Changed"/>
                                     </StackPanel>
                                 </Border>
                                 <Grid Margin="0,14,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="112"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="46"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="LblOrig" Text="ორიგინალი ხმა" FontSize="12.5"
-                                               Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
-                                    <Slider Grid.Column="1" x:Name="SlOrig" Minimum="0" Maximum="100" Value="20"
-                                            ValueChanged="SlOrig_Changed" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2" x:Name="TxtOrig" Text="20%" FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource AccentText}" HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"/>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="118"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/></Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LblOrig" Text="ორიგინალი ხმა" Style="{StaticResource FxLabel}"/>
+                                    <Slider Grid.Column="1" x:Name="SlOrig" Minimum="0" Maximum="100" Value="20" ValueChanged="SlOrig_Changed" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtOrig" Text="20%" Style="{StaticResource FxValue}"/>
                                 </Grid>
-                                <TextBlock x:Name="TxtMixHint" FontSize="11.5" Foreground="{DynamicResource TextMuted}"
-                                           TextWrapping="Wrap" Margin="0,10,0,0"
+                                <TextBlock x:Name="TxtMixHint" FontSize="11.5" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,10,0,0"
                                            Text="ფიქსირებული: ორიგინალი ხმა მთელ ვიდეოზე ერთნაირი დონით იქნება."/>
                             </StackPanel>
                         </Border>
@@ -293,27 +554,27 @@
                 </ScrollViewer>
 
                 <!-- export -->
-                <StackPanel Grid.Row="1" Margin="0,12,6,0">
+                <StackPanel Grid.Row="1" Margin="0,12,10,0">
                     <ProgressBar x:Name="PbExport" Height="5" Minimum="0" Maximum="100" Visibility="Collapsed" Margin="0,0,0,8"/>
-                    <TextBlock x:Name="TxtExportStatus" FontSize="12" Foreground="{DynamicResource TextMuted}"
-                               TextWrapping="Wrap" Margin="2,0,0,8"/>
+                    <TextBlock x:Name="TxtExportStatus" FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="2,0,0,8"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="8"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="BtnExport" Style="{StaticResource GlowPrimaryButton}" Height="50" IsEnabled="False"
-                                Click="BtnExport_Click">
+                        <Button x:Name="BtnExport" Style="{StaticResource GlowPrimaryButton}" Height="50" IsEnabled="False" Click="BtnExport_Click">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,10,0"
-                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="15" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="ვიდეოს შენახვა ახალი ხმით" VerticalAlignment="Center" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
-                        <Button Grid.Column="2" x:Name="BtnCompare" Style="{StaticResource SecondaryButton}" Height="50"
-                                Padding="14,0" Content="A/B" ToolTip="შედარება ორიგინალთან" Visibility="Collapsed"
-                                Click="BtnCompare_Click"/>
+                        <Button Grid.Column="2" x:Name="BtnExportWav" Style="{StaticResource SecondaryButton}" Height="50" Padding="14,0" Content="WAV" IsEnabled="False"
+                                ToolTip="მხოლოდ შენი ხმა ცალკე ფაილად (დამუშავებით)" Click="BtnExportWav_Click"/>
+                        <Button Grid.Column="4" x:Name="BtnCompare" Style="{StaticResource SecondaryButton}" Height="50" Padding="14,0" Content="A/B"
+                                ToolTip="შედარება ორიგინალთან" Visibility="Collapsed" Click="BtnCompare_Click"/>
                     </Grid>
                 </StackPanel>
             </Grid>

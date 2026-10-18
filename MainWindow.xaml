@@ -703,7 +703,7 @@
                                     </StackPanel>
                                     <Border Grid.Column="2" Background="{DynamicResource BgCard}" BorderBrush="{DynamicResource Border}"
                                             BorderThickness="1" CornerRadius="16" Padding="14,7" VerticalAlignment="Center">
-                                        <TextBlock Text="1Flow AiAssistant · v1.1.0" FontSize="12.5" Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="1Flow AiAssistant · v1.2.0" FontSize="12.5" Foreground="{DynamicResource TextSecondary}"/>
                                     </Border>
                                 </Grid>
 
