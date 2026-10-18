@@ -20,7 +20,6 @@ namespace AiAssistant
             // while a shortcut is being recorded, take every key before any control can swallow it
             PreviewKeyDown += (s, e) =>
             {
-                try { File.AppendAllText(Path.Combine(Path.GetTempPath(), "kdbg.txt"), $"{DateTime.Now:HH:mm:ss.fff} {e.Key} cap={_capturingAction}\n"); } catch { }
                 if (_capturingAction != null) Window_KeyDown(s, e);
             };
             MainTabControl.SelectionChanged += (s, e) =>

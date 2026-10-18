@@ -11,6 +11,12 @@ Usage:
     mode   = blur | color | image | video
     param  = blur strength (e.g. 35) | #RRGGBB | path to image/video
     invert = "1" → the person is replaced and the background stays
+
+Optional flags (anywhere): --opts <file.json>   --t <seconds> (preview: which moment to show)
+Options JSON: {"quality": "fast|balanced|max", "solidify": 0-100, "defringe": 0-100, "smooth": 0-100,
+               "grow": -10..10 (edge in/out, % of height*0.1), "feather": 0-100,
+               "off": [[from_sec, to_sec], ...]   ← moments where the original picture stays,
+               "people": {"analysis": "<analysis.json of face_blur.py>", "keep": [1, 2]}  ← only these people stay}
 """
 import sys, os, subprocess, urllib.request, tempfile, threading, queue
 import cv2
@@ -157,8 +163,9 @@ RVM_URL = "https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0
 class RvmMatte:
     name = "rvm"
 
-    def __init__(self, session, width):
-        self.sess, self.width = session, width
+    def __init__(self, session, width, internal=480):
+        self.sess, self.width, self.internal = session, width, internal
+        self.cut = False
         self.reset()
         self._prev_small = None
 
@@ -173,11 +180,13 @@ class RvmMatte:
         small = cv2.resize(frame, (W, H), interpolation=cv2.INTER_AREA)
         # a hard cut → forget the previous scene, otherwise the old person "ghosts" into the new shot
         g = cv2.cvtColor(cv2.resize(small, (64, 36)), cv2.COLOR_BGR2GRAY).astype(np.int16)
+        self.cut = False
         if self._prev_small is not None and np.abs(g - self._prev_small).mean() > 45:
             self.reset()
+            self.cut = True
         self._prev_small = g
         x = cv2.cvtColor(small, cv2.COLOR_BGR2RGB).astype(np.float32).transpose(2, 0, 1)[None] / 255.0
-        ratio = np.array([min(1.0, 480.0 / W)], np.float32)
+        ratio = np.array([min(1.0, float(self.internal) / W)], np.float32)
         out = self.sess.run(None, {"src": x, "r1i": self.rec[0], "r2i": self.rec[1], "r3i": self.rec[2],
                                    "r4i": self.rec[3], "downsample_ratio": ratio})
         self.rec = list(out[2:6])
@@ -197,6 +206,8 @@ class MpMatte:
     def __init__(self, segment_fn, close_fn):
         self.segment_fn, self.close_fn = segment_fn, close_fn
 
+    cut = False
+
     def reset(self):
         pass
 
@@ -212,7 +223,10 @@ class MpMatte:
         self.close_fn()
 
 
-def get_matte(width=960):
+QUALITY = {"fast": (640, 384), "balanced": (960, 480), "max": (1280, 640)}    # (input width, matting resolution)
+
+
+def get_matte(width=960, internal=480):
     """Best available matting engine. Prints a [STATUS] line if it has to fall back."""
     try:
         import onnxruntime as ort
@@ -227,11 +241,218 @@ def get_matte(width=960):
         opts = ort.SessionOptions()
         opts.log_severity_level = 3
         sess = ort.InferenceSession(data, opts, providers=["CPUExecutionProvider"])
-        return RvmMatte(sess, width)
+        return RvmMatte(sess, width, internal)
     except Exception as e:
         print(f"[STATUS] მაღალი ხარისხის მოდელი მიუწვდომელია ({type(e).__name__}) — სტანდარტული რეჟიმი.", flush=True)
         seg, close = get_segmenter()
         return MpMatte(seg, close)
+
+# ── Options + matte refinement ──────────────────────────────────────────────
+DEFAULT_OPTS = {"quality": "balanced", "solidify": 60, "defringe": 60, "smooth": 30, "grow": 0, "feather": 0, "off": [],
+                "people": None}            # {"analysis": "<face_blur json>", "keep": [ids]} → only these people stay
+
+
+def make_selector(opts):
+    pe = opts.get("people")
+    if not pe or not pe.get("analysis") or not os.path.isfile(pe["analysis"]):
+        return None
+    try:
+        return PersonSelector(pe["analysis"], pe.get("keep", []))
+    except Exception as e:
+        print(f"[STATUS] ადამიანების არჩევა ვერ ჩაიტვირთა: {e}", flush=True)
+        return None
+
+
+def load_opts(path):
+    o = dict(DEFAULT_OPTS)
+    if path and os.path.isfile(path):
+        try:
+            import json
+            with open(path, encoding="utf-8-sig") as fh:
+                o.update(json.load(fh))
+        except Exception as e:
+            print(f"[STATUS] პარამეტრების ფაილი ვერ წაიკითხა: {e}", flush=True)
+    return o
+
+
+def solidify(alpha, amount):
+    """Fill the holes the matting leaves INSIDE the person (jersey / hair colour close to the background)."""
+    if amount <= 0:
+        return alpha
+    h, w = alpha.shape
+    sc = 480.0 / max(h, w)                       # a cheap mask operation: work on a small copy
+    a = cv2.resize(alpha, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA) if sc < 1 else alpha
+    core = (a > 0.18).astype(np.uint8)
+    inv = (1 - core).astype(np.uint8)
+    ff = inv.copy()
+    mask = np.zeros((inv.shape[0] + 2, inv.shape[1] + 2), np.uint8)
+    for (x, y) in [(0, 0), (inv.shape[1] - 1, 0), (0, inv.shape[0] - 1), (inv.shape[1] - 1, inv.shape[0] - 1)]:
+        if ff[y, x] == 1:
+            cv2.floodFill(ff, mask, (x, y), 2)
+    holes = (ff == 1).astype(np.uint8)           # "background" pixels fully enclosed by the person
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(holes, connectivity=4)
+    maxarea = a.shape[0] * a.shape[1] * 0.004 * (amount / 100.0) * 1.6
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] <= maxarea:
+            core[lab == i] = 1
+    r = max(1, int(round(a.shape[0] * 0.012)))
+    inner = cv2.erode(core, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1)))
+    inner = cv2.GaussianBlur(inner.astype(np.float32), (0, 0), r * 0.6)
+    inner = cv2.resize(inner, (w, h), interpolation=cv2.INTER_LINEAR) if sc < 1 else inner
+    return np.maximum(alpha, inner * min(1.0, amount / 50.0))
+
+
+def defringe(frame, alpha, strength):
+    """Take the OLD background colour out of the soft edge, so no halo shows on the new background."""
+    if strength <= 0:
+        return frame
+    h, w = alpha.shape
+    soft = (alpha > 0.02) & (alpha < 0.98)
+    ys, xs = np.where(soft[::4, ::4])                      # where is there any soft edge at all? (coarse look)
+    if len(ys) == 0:
+        return frame
+    pad = max(8, int(h * 0.04))
+    y0, y1 = max(0, ys.min() * 4 - pad), min(h, ys.max() * 4 + pad + 4)
+    x0, x1 = max(0, xs.min() * 4 - pad), min(w, xs.max() * 4 + pad + 4)
+    fr, al = frame[y0:y1, x0:x1], alpha[y0:y1, x0:x1]
+    ch, cw = al.shape
+    sc = 0.3
+    sm = cv2.resize(fr, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA).astype(np.float32)
+    am = cv2.resize(al, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA)
+    inv = 1 - am
+    k = max(3, int(h * sc * 0.03)) | 1
+    num = cv2.blur(sm * inv[..., None], (k, k))
+    den = cv2.blur(inv, (k, k))[..., None] + 1e-3
+    bg_old = num / den                                   # what the old background looked like next to the edge
+    F = np.clip((sm - (1 - am)[..., None] * bg_old) / np.clip(am, 0.05, 1)[..., None], 0, 255)
+    band = ((am > 0.02) & (am < 0.98)).astype(np.float32)
+    band = cv2.blur(band, (5, 5)) * (strength / 100.0)
+    band = cv2.resize(band, (cw, ch), interpolation=cv2.INTER_LINEAR)[..., None]
+    F = cv2.resize(F, (cw, ch), interpolation=cv2.INTER_LINEAR)
+    out = frame.copy()
+    out[y0:y1, x0:x1] = (fr.astype(np.float32) * (1 - band) + F * band).astype(np.uint8)
+    return out
+
+class Refiner:
+    """alpha post-processing: edge position, feather, filled holes, calmer flicker."""
+
+    def __init__(self, o):
+        self.o = o
+        self.prev = None
+
+    def reset(self):
+        self.prev = None
+
+    def alpha(self, frame, a):
+        o = self.o
+        h = a.shape[0]
+        grow = float(o.get("grow", 0))
+        if abs(grow) >= 0.5:                              # push the edge outwards (+) / inwards (-)
+            r = max(1, int(round(h * 0.0012 * abs(grow))))
+            kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+            a = cv2.dilate(a, kern) if grow > 0 else cv2.erode(a, kern)
+        feather = float(o.get("feather", 0))
+        if feather > 0:
+            sg = max(0.6, h * 0.0016 * feather / 10.0)
+            a = cv2.GaussianBlur(a, (0, 0), sg)
+        a = solidify(a, float(o.get("solidify", 0)))
+        sm = float(o.get("smooth", 0)) / 100.0
+        if sm > 0 and self.prev is not None and self.prev.shape == a.shape:
+            base = 1.0 - 0.6 * sm                         # how much of the NEW frame is taken in static areas
+            diff = np.abs(a - self.prev)
+            wgt = np.where(diff > 0.3, 1.0, base).astype(np.float32)   # real motion → follow immediately
+            a = self.prev + (a - self.prev) * wgt
+        self.prev = a
+        return a
+
+
+def opts_args(argv):
+    """Pull the optional --opts <file> / --t <seconds> flags out of argv. → (positional args, opts file, seconds)."""
+    pos, opts, tsec, i = [], None, None, 0
+    while i < len(argv):
+        if argv[i] == "--opts" and i + 1 < len(argv):
+            opts = argv[i + 1]; i += 2
+        elif argv[i] == "--t" and i + 1 < len(argv):
+            try:
+                tsec = float(argv[i + 1])
+            except ValueError:
+                pass
+            i += 2
+        else:
+            pos.append(argv[i]); i += 1
+    return pos, opts, tsec
+
+# ── Choose WHO stays (person selection) ─────────────────────────────────────
+class PersonSelector:
+    """Keeps only the chosen people from the matte. People come from a face_blur.py analysis (face track per
+    person); every foreground pixel is given to the person whose body (a capsule hanging below the face) it is
+    closest to. Foreground that belongs to nobody the user chose is dropped → it gets the new background."""
+
+    def __init__(self, analysis_path, keep_ids):
+        import json, bisect
+        self.bisect = bisect
+        with open(analysis_path, encoding="utf-8") as fh:
+            d = json.load(fh)
+        self.keep = set(int(i) for i in keep_ids)
+        self.tracks = []
+        for t in d["tracks"]:
+            boxes = {int(k): v for k, v in t["boxes"].items()}
+            if boxes:
+                self.tracks.append((int(t["id"]), boxes, sorted(boxes)))
+        self.vw, self.vh = d.get("width", 1), d.get("height", 1)
+
+    def _box(self, boxes, frames, f, hold=24):
+        b = boxes.get(f)
+        if b is not None:
+            return b
+        i = self.bisect.bisect_left(frames, f)
+        c = [frames[j] for j in (i - 1, i) if 0 <= j < len(frames)]
+        if not c:
+            return None
+        k = min(c, key=lambda q: abs(q - f))
+        return boxes[k] if abs(k - f) <= hold else None        # carried for ~1 s while the face is not seen
+
+    def mask(self, alpha, frame_idx, W, H):
+        """→ float32 mask (alpha's size): 1 where a CHOSEN person is, 0 elsewhere."""
+        h, w = alpha.shape
+        sc = 320.0 / max(h, w)
+        sh, sw = max(2, int(h * sc)), max(2, int(w * sc))
+        a = cv2.resize(alpha, (sw, sh), interpolation=cv2.INTER_AREA)
+        fx, fy = sw / float(W), sh / float(H)
+        yy, xx = np.mgrid[0:sh, 0:sw].astype(np.float32)
+        best = np.full((sh, sw), 1e9, np.float32)
+        owner = np.full((sh, sw), -1, np.int32)
+        present = False
+        for pid, boxes, frames in self.tracks:
+            b = self._box(boxes, frames, frame_idx)
+            if b is None:
+                continue
+            present = True
+            x, y, bw, bh = b[0] * fx, b[1] * fy, b[2] * fx, b[3] * fy
+            cx, cy = x + bw / 2, y + bh / 2
+            # body = a segment from the face centre down; its "width" is about two face widths
+            ey = cy + bh * 3.0
+            vx, vy = 0.0, ey - cy
+            L2 = vy * vy + 1e-6
+            t = np.clip(((xx - cx) * vx + (yy - cy) * vy) / L2, 0, 1)
+            px, py = cx + t * vx, cy + t * vy
+            width = bw * (0.9 + 0.55 * t)                    # shoulders are wider than the head
+            dist = np.sqrt((xx - px) ** 2 + (yy - py) ** 2) / np.maximum(width, 1.0)
+            upd = dist < best
+            best = np.where(upd, dist, best)
+            owner = np.where(upd, pid, owner)
+        fg = a > 0.15
+        n, lab = cv2.connectedComponents(fg.astype(np.uint8), connectivity=8)
+        keep = np.zeros((sh, sw), np.float32)
+        if present:
+            seeded = np.zeros(n + 1, bool)                   # components that contain a confident part of somebody
+            conf = fg & (best < 1.1)
+            seeded[np.unique(lab[conf])] = True
+            ok = fg & seeded[lab]
+            kept_ids = np.isin(owner, list(self.keep))
+            keep = (ok & kept_ids).astype(np.float32)
+        keep = cv2.GaussianBlur(keep, (0, 0), 1.2)
+        return cv2.resize(keep, (w, h), interpolation=cv2.INTER_LINEAR)
 
 # ── Background source + compositing ────────────────────────────────────────
 class Background:
@@ -319,7 +540,7 @@ def _prefetch(cap, q):
 
 
 # ── Modes ───────────────────────────────────────────────────────────────────
-def run_process(input_path, mode, param, output_path, invert):
+def run_process(input_path, mode, param, output_path, invert, opts=None):
     if not os.path.exists(input_path):
         print(f"[STATUS] ფაილი ვერ მოიძებნა: {input_path}", flush=True)
         sys.exit(1)
@@ -334,12 +555,17 @@ def run_process(input_path, mode, param, output_path, invert):
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    opts = opts or dict(DEFAULT_OPTS)
+    qw, qi = QUALITY.get(opts.get("quality"), QUALITY["balanced"])
     try:
-        matte = get_matte(960)
+        matte = get_matte(qw, qi)
     except (ImportError, RuntimeError) as e:
         print(f"[STATUS] {e}", flush=True)
         sys.exit(1)
 
+    refiner = Refiner(opts)
+    sel = make_selector(opts)
+    off = [(float(a), float(b)) for a, b in opts.get("off", [])]
     bg = Background(mode, param, width, height)
     print("[STATUS] AI ფონის ანალიზი იწყება...", flush=True)
 
@@ -364,7 +590,18 @@ def run_process(input_path, mode, param, output_path, invert):
         if frame is None:
             break
         frame_count += 1
-        out = compose(frame, matte.alpha(frame), bg.frame_for(frame), invert)
+        t_now = (frame_count - 1) / fps
+        if off and any(a <= t_now <= b for a, b in off):          # the user keeps the original here
+            matte.reset(); refiner.reset()
+            out = frame
+        else:
+            a = matte.alpha(frame)
+            if sel is not None:
+                a = a * sel.mask(a, frame_count - 1, width, height)
+            if matte.cut:
+                refiner.reset()
+            a = refiner.alpha(frame, a)
+            out = compose(defringe(frame, a, float(opts.get("defringe", 0))), a, bg.frame_for(frame), invert)
         try:
             enc.stdin.write(out.tobytes())
         except (BrokenPipeError, OSError):
@@ -391,29 +628,42 @@ def run_process(input_path, mode, param, output_path, invert):
         sys.exit(1)
 
 
-def run_preview(input_path, mode, param, out_path, invert):
+def run_preview(input_path, mode, param, out_path, invert, opts=None, tsec=None):
     """One processed frame from the middle of the video → JPEG (so the user sees the look before rendering)."""
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
         print("[STATUS] ვიდეოს გახსნა ვერ მოხერხდა.", flush=True)
         sys.exit(1)
+    opts = opts or dict(DEFAULT_OPTS)
+    qw, qi = QUALITY.get(opts.get("quality"), QUALITY["balanced"])
     try:
-        matte = get_matte(1280)
+        matte = get_matte(max(qw, 1280) if opts.get("quality") == "max" else 1280 if opts.get("quality") != "fast" else qw, qi)
     except (ImportError, RuntimeError) as e:
         print(f"[STATUS] {e}", flush=True)
         sys.exit(1)
 
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps_p = cap.get(cv2.CAP_PROP_FPS) or 30.0
     mid = total // 2 if total > 2 else 0
+    if tsec is not None:
+        mid = int(min(max(0, round(tsec * fps_p)), max(0, total - 1)))
     start = max(0, mid - 6)               # let the matting model "warm up" on a few frames before the shown one
+    refiner = Refiner(opts)
+    sel = make_selector(opts)
+    vw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)); vh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     cap.set(cv2.CAP_PROP_POS_FRAMES, start)
     frame, alpha = None, None
-    for _ in range(mid - start + 1):
+    for step in range(mid - start + 1):
         ok, fr = cap.read()
         if not ok:
             break
         frame = fr
         alpha = matte.alpha(fr)
+        if sel is not None:
+            alpha = alpha * sel.mask(alpha, start + step, vw, vh)
+        if matte.cut:
+            refiner.reset()
+        alpha = refiner.alpha(fr, alpha)
     cap.release()
     if frame is None:
         print("[STATUS] კადრი ვერ წაიკითხა.", flush=True)
@@ -421,7 +671,11 @@ def run_preview(input_path, mode, param, out_path, invert):
 
     h, w = frame.shape[:2]
     bg = Background(mode, param, w, h)
-    out = compose(frame, alpha, bg.frame_for(frame), invert)
+    t_shown = mid / fps_p
+    if any(float(a) <= t_shown <= float(b) for a, b in opts.get("off", [])):
+        out = frame                                       # the user keeps the original at this moment
+    else:
+        out = compose(defringe(frame, alpha, float(opts.get("defringe", 0))), alpha, bg.frame_for(frame), invert)
     bg.close()
     matte.close()
     imwrite_unicode(out_path, out)
@@ -467,17 +721,17 @@ def run_webcam(mode, param, invert):
     cv2.destroyAllWindows()
 
 def main():
-    a = sys.argv
+    a, opts_file, tsec = opts_args(sys.argv)
+    opts = load_opts(opts_file)
     if len(a) >= 2 and a[1] == "preview" and len(a) >= 6:
-        run_preview(a[2], a[3], a[4], a[5], len(a) > 6 and a[6] == "1")
+        run_preview(a[2], a[3], a[4], a[5], len(a) > 6 and a[6] == "1", opts, tsec)
     elif len(a) >= 2 and a[1] == "webcam" and len(a) >= 4:
         run_webcam(a[2], a[3], len(a) > 5 and a[5] == "1")
     elif len(a) >= 5:
-        run_process(a[1], a[2], a[3], a[4], len(a) > 5 and a[5] == "1")
+        run_process(a[1], a[2], a[3], a[4], len(a) > 5 and a[5] == "1", opts)
     else:
-        print("[STATUS] გამოყენება: virtual_bg.py <input> <mode> <param> <output> [invert]", flush=True)
+        print("[STATUS] გამოყენება: virtual_bg.py <input> <mode> <param> <output> [invert] [--opts file.json]", flush=True)
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
